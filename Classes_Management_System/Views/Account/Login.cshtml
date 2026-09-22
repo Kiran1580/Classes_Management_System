@@ -13,6 +13,9 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <style>
+        * {
+            box-sizing: border-box;
+        }
         body {
             background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
             min-height: 100vh;
@@ -20,77 +23,135 @@
             align-items: center;
             justify-content: center;
             font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            color: #e2e8f0;
+            color: #f8fafc;
+            margin: 0;
+            padding: 1rem;
         }
         .login-card {
-            background: rgba(30, 41, 59, 0.85);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: #1e293b;
+            border: 1px solid rgba(255, 255, 255, 0.12);
             border-radius: 1.25rem;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
             width: 100%;
-            max-width: 480px;
-            padding: 2.5rem;
+            max-width: 440px;
+            padding: 2.25rem;
         }
         @@media (max-width: 576px) {
             .login-card {
                 padding: 1.5rem 1.25rem;
-                margin: 1rem;
                 border-radius: 1rem;
             }
         }
         .brand-badge {
-            width: 64px;
-            height: 64px;
+            width: 60px;
+            height: 60px;
             background: linear-gradient(135deg, #3b82f6, #6366f1);
             border-radius: 1rem;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 2rem;
+            font-size: 1.85rem;
             color: white;
-            box-shadow: 0 10px 20px -5px rgba(59, 130, 246, 0.5);
+            box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.5);
         }
-        .form-control {
-            background-color: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            color: #f8fafc;
-            padding: 0.75rem 1rem;
+        .field-label {
+            color: #cbd5e1;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            margin-bottom: 0.4rem;
+            display: block;
+        }
+        /* Unified White Input Box */
+        .custom-input-group {
+            display: flex;
+            align-items: center;
+            background: #ffffff;
+            border: 1.5px solid #cbd5e1;
             border-radius: 0.75rem;
+            overflow: hidden;
+            transition: all 0.2s ease;
         }
-        .form-control:focus {
-            background-color: rgba(15, 23, 42, 0.9);
+        .custom-input-group:focus-within {
             border-color: #3b82f6;
-            color: #f8fafc;
-            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25);
+            box-shadow: 0 0 0 3.5px rgba(59, 130, 246, 0.25);
+        }
+        .custom-input-group .input-icon {
+            padding: 0.75rem 0.25rem 0.75rem 1rem;
+            color: #64748b;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+        }
+        .custom-input-group input.custom-control {
+            flex: 1;
+            border: none;
+            outline: none;
+            background: #ffffff;
+            color: #0f172a;
+            font-size: 0.95rem;
+            font-weight: 500;
+            padding: 0.75rem 0.85rem;
+        }
+        .custom-input-group input.custom-control::placeholder {
+            color: #94a3b8;
+            font-weight: 400;
+        }
+        .custom-input-group .eye-toggle-btn {
+            background: transparent;
+            border: none;
+            outline: none;
+            padding: 0.75rem 1rem 0.75rem 0.5rem;
+            color: #64748b;
+            font-size: 1.15rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.15s ease;
+        }
+        .custom-input-group .eye-toggle-btn:hover {
+            color: #0f172a;
+        }
+        /* Fix Chrome/Edge autofill turning yellow/blue */
+        .custom-input-group input:-webkit-autofill,
+        .custom-input-group input:-webkit-autofill:hover,
+        .custom-input-group input:-webkit-autofill:focus {
+            -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
+            -webkit-text-fill-color: #0f172a !important;
+        }
+        .form-check-label {
+            color: #cbd5e1;
+            font-size: 0.88rem;
+            user-select: none;
+            cursor: pointer;
+        }
+        .form-check-input {
+            cursor: pointer;
+        }
+        .form-check-input:checked {
+            background-color: #3b82f6;
+            border-color: #3b82f6;
         }
         .btn-login {
             background: linear-gradient(135deg, #3b82f6 0%, #4f46e5 100%);
             border: none;
-            padding: 0.8rem;
+            color: #ffffff;
+            padding: 0.85rem;
             border-radius: 0.75rem;
             font-weight: 600;
-            letter-spacing: 0.025em;
+            font-size: 0.95rem;
+            letter-spacing: 0.02em;
             box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.4);
             transition: transform 0.15s ease, box-shadow 0.15s ease;
         }
         .btn-login:hover {
             transform: translateY(-1px);
             box-shadow: 0 15px 20px -3px rgba(59, 130, 246, 0.6);
-        }
-        .demo-btn {
-            font-size: 0.8rem;
-            padding: 0.4rem 0.65rem;
-            border-radius: 0.5rem;
-            border: 1px dashed rgba(255, 255, 255, 0.25);
-            color: #94a3b8;
-            background: rgba(15, 23, 42, 0.4);
-            transition: all 0.2s;
-        }
-        .demo-btn:hover {
-            background: rgba(59, 130, 246, 0.2);
-            border-color: #3b82f6;
-            color: #60a5fa;
+            color: #ffffff;
         }
     </style>
 </head>
@@ -101,7 +162,7 @@
                 <i class="bi bi-mortarboard-fill"></i>
             </div>
             <h3 class="fw-bold text-white mb-1">Class Management</h3>
-            <p class="text-secondary small">Sign in to access your portal</p>
+            <p class="text-light text-opacity-75 small mb-0">Sign in to access your portal</p>
         </div>
 
         @if (!ViewData.ModelState.IsValid)
@@ -116,68 +177,65 @@
             @Html.AntiForgeryToken()
             <input type="hidden" asp-for="ReturnUrl" />
 
+            <!-- Email Field -->
             <div class="mb-3">
-                <label class="form-label small text-secondary fw-semibold">EMAIL ADDRESS</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-transparent border-end-0 text-secondary" style="border-color: rgba(255,255,255,0.15); border-radius: 0.75rem 0 0 0.75rem;">
+                <label class="field-label">Email Address</label>
+                <div class="custom-input-group">
+                    <div class="input-icon">
                         <i class="bi bi-envelope"></i>
-                    </span>
-                    <input asp-for="Email" id="emailInput" class="form-control border-start-0" style="border-radius: 0 0.75rem 0.75rem 0;" placeholder="name@institute.com" autofocus />
+                    </div>
+                    <input asp-for="Email" id="emailInput" class="custom-control" placeholder="name@institute.com" autofocus />
                 </div>
-                <span asp-validation-for="Email" class="text-danger small"></span>
+                <span asp-validation-for="Email" class="text-danger small mt-1 d-block"></span>
             </div>
 
+            <!-- Password Field -->
             <div class="mb-3">
-                <label class="form-label small text-secondary fw-semibold">PASSWORD</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-transparent border-end-0 text-secondary" style="border-color: rgba(255,255,255,0.15); border-radius: 0.75rem 0 0 0.75rem;">
+                <label class="field-label">Password</label>
+                <div class="custom-input-group">
+                    <div class="input-icon">
                         <i class="bi bi-lock"></i>
-                    </span>
-                    <input asp-for="Password" id="passwordInput" class="form-control border-start-0" style="border-radius: 0 0.75rem 0.75rem 0;" placeholder="••••••••" />
+                    </div>
+                    <input asp-for="Password" id="passwordInput" type="password" class="custom-control" placeholder="••••••••" />
+                    <button class="eye-toggle-btn" type="button" id="togglePasswordBtn" title="Show/Hide Password" aria-label="Toggle password visibility">
+                        <i class="bi bi-eye" id="togglePasswordIcon"></i>
+                    </button>
                 </div>
-                <span asp-validation-for="Password" class="text-danger small"></span>
+                <span asp-validation-for="Password" class="text-danger small mt-1 d-block"></span>
             </div>
 
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <!-- Remember Me -->
+            <div class="d-flex justify-content-between align-items-center mb-4 pt-1">
                 <div class="form-check">
-                    <input asp-for="RememberMe" class="form-check-input bg-dark border-secondary" type="checkbox" id="rememberMe">
-                    <label class="form-check-label small text-secondary" for="rememberMe">
+                    <input asp-for="RememberMe" class="form-check-input" type="checkbox" id="rememberMe">
+                    <label class="form-check-label" for="rememberMe">
                         Remember me
                     </label>
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-login btn-primary w-100 mb-4">
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-login w-100">
                 <i class="bi bi-box-arrow-in-right me-1"></i> Sign In
             </button>
-
-            <!-- Quick Demo Credentials -->
-            <div class="pt-3 border-top border-secondary border-opacity-25">
-                <div class="text-center mb-2">
-                    <span class="small text-secondary fw-semibold text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.05em;">
-                        Quick 1-Click Demo Login
-                    </span>
-                </div>
-                <div class="d-flex gap-2 justify-content-center flex-wrap">
-                    <button type="button" class="demo-btn" onclick="fillCredentials('admin@cms.com', 'Admin@123')">
-                        <i class="bi bi-shield-lock-fill text-danger me-1"></i> Admin
-                    </button>
-                    <button type="button" class="demo-btn" onclick="fillCredentials('teacher@cms.com', 'Teacher@123')">
-                        <i class="bi bi-person-video3 text-warning me-1"></i> Teacher
-                    </button>
-                    <button type="button" class="demo-btn" onclick="fillCredentials('student@cms.com', 'Student@123')">
-                        <i class="bi bi-backpack4-fill text-info me-1"></i> Student
-                    </button>
-                </div>
-            </div>
         </form>
     </div>
 
     <script>
-        function fillCredentials(email, password) {
-            document.getElementById('emailInput').value = email;
-            document.getElementById('passwordInput').value = password;
-        }
+        document.addEventListener('DOMContentLoaded', function () {
+            const toggleBtn = document.getElementById('togglePasswordBtn');
+            const passwordInput = document.getElementById('passwordInput');
+            const toggleIcon = document.getElementById('togglePasswordIcon');
+
+            if (toggleBtn && passwordInput && toggleIcon) {
+                toggleBtn.addEventListener('click', function () {
+                    const isPassword = passwordInput.getAttribute('type') === 'password';
+                    passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+                    toggleIcon.classList.toggle('bi-eye', !isPassword);
+                    toggleIcon.classList.toggle('bi-eye-slash', isPassword);
+                });
+            }
+        });
     </script>
 </body>
 </html>
