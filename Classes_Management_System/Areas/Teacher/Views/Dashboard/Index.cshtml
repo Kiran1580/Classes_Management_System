@@ -1,0 +1,44 @@
+@model CMS_DAL.Models.TeacherDashboardStats
+@{
+    ViewData["Title"] = "Faculty Dashboard";
+}
+
+<div class="row g-4 mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm rounded-4 p-4 text-white" style="background: linear-gradient(135deg, #1e3a8a 0%, #1e293b 100%);">
+            <h3 class="fw-bold mb-1">Welcome, @(User.Identity?.Name ?? "Faculty Member") 👨‍🏫</h3>
+            <p class="text-light text-opacity-75 mb-0">Track your assigned batches, mark student attendance, and upload study materials.</p>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-md-3">
+        <div class="card border-0 shadow-sm rounded-3 p-3">
+            <div class="text-secondary small fw-semibold text-uppercase">My Batches</div>
+            <div class="fs-3 fw-bold text-dark mt-1">@Model.MyBatchesCount</div>
+            <small class="text-muted">Assigned batches</small>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-md-3">
+        <div class="card border-0 shadow-sm rounded-3 p-3">
+            <div class="text-secondary small fw-semibold text-uppercase">Students Enrolled</div>
+            <div class="fs-3 fw-bold text-dark mt-1">@Model.TotalStudentsEnrolled</div>
+            <small class="text-muted">Total active learners</small>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-md-3">
+        <div class="card border-0 shadow-sm rounded-3 p-3">
+            <div class="text-secondary small fw-semibold text-uppercase">Today's Lectures</div>
+            <div class="fs-3 fw-bold text-dark mt-1">@Model.TodayLecturesCount</div>
+            <small class="text-primary">Scheduled sessions</small>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-md-3">
+        <div class="card border-0 shadow-sm rounded-3 p-3">
+            <div class="text-secondary small fw-semibold text-uppercase">Upcoming Exams</div>
+            <div class="fs-3 fw-bold text-dark mt-1">@Model.UpcomingExamsCount</div>
+            <small class="text-danger">Tests scheduled</small>
+        </div>
+    </div>
+</div>

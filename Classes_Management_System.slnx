@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="Classes_Management_System/Classes_Management_System.csproj" />
+  <Project Path="CMS_BAL/CMS_BAL.csproj" />
+  <Project Path="CMS_DAL/CMS_DAL.csproj" />
+</Solution>

@@ -1,0 +1,183 @@
+@model CMS_BAL.ViewModels.LoginViewModel
+@{
+    Layout = null;
+    ViewData["Title"] = "Login - Classes Management System";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: #e2e8f0;
+        }
+        .login-card {
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.25rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 480px;
+            padding: 2.5rem;
+        }
+        @@media (max-width: 576px) {
+            .login-card {
+                padding: 1.5rem 1.25rem;
+                margin: 1rem;
+                border-radius: 1rem;
+            }
+        }
+        .brand-badge {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            border-radius: 1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+            box-shadow: 0 10px 20px -5px rgba(59, 130, 246, 0.5);
+        }
+        .form-control {
+            background-color: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #f8fafc;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+        }
+        .form-control:focus {
+            background-color: rgba(15, 23, 42, 0.9);
+            border-color: #3b82f6;
+            color: #f8fafc;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25);
+        }
+        .btn-login {
+            background: linear-gradient(135deg, #3b82f6 0%, #4f46e5 100%);
+            border: none;
+            padding: 0.8rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.025em;
+            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.4);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .btn-login:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 15px 20px -3px rgba(59, 130, 246, 0.6);
+        }
+        .demo-btn {
+            font-size: 0.8rem;
+            padding: 0.4rem 0.65rem;
+            border-radius: 0.5rem;
+            border: 1px dashed rgba(255, 255, 255, 0.25);
+            color: #94a3b8;
+            background: rgba(15, 23, 42, 0.4);
+            transition: all 0.2s;
+        }
+        .demo-btn:hover {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: #3b82f6;
+            color: #60a5fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="text-center mb-4">
+            <div class="brand-badge mb-3">
+                <i class="bi bi-mortarboard-fill"></i>
+            </div>
+            <h3 class="fw-bold text-white mb-1">Class Management</h3>
+            <p class="text-secondary small">Sign in to access your portal</p>
+        </div>
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="alert alert-danger py-2 px-3 small rounded-3 mb-3" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                @Html.ValidationSummary(true, "")
+            </div>
+        }
+
+        <form asp-controller="Account" asp-action="Login" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="ReturnUrl" />
+
+            <div class="mb-3">
+                <label class="form-label small text-secondary fw-semibold">EMAIL ADDRESS</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-transparent border-end-0 text-secondary" style="border-color: rgba(255,255,255,0.15); border-radius: 0.75rem 0 0 0.75rem;">
+                        <i class="bi bi-envelope"></i>
+                    </span>
+                    <input asp-for="Email" id="emailInput" class="form-control border-start-0" style="border-radius: 0 0.75rem 0.75rem 0;" placeholder="name@institute.com" autofocus />
+                </div>
+                <span asp-validation-for="Email" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label small text-secondary fw-semibold">PASSWORD</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-transparent border-end-0 text-secondary" style="border-color: rgba(255,255,255,0.15); border-radius: 0.75rem 0 0 0.75rem;">
+                        <i class="bi bi-lock"></i>
+                    </span>
+                    <input asp-for="Password" id="passwordInput" class="form-control border-start-0" style="border-radius: 0 0.75rem 0.75rem 0;" placeholder="••••••••" />
+                </div>
+                <span asp-validation-for="Password" class="text-danger small"></span>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="form-check">
+                    <input asp-for="RememberMe" class="form-check-input bg-dark border-secondary" type="checkbox" id="rememberMe">
+                    <label class="form-check-label small text-secondary" for="rememberMe">
+                        Remember me
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-login btn-primary w-100 mb-4">
+                <i class="bi bi-box-arrow-in-right me-1"></i> Sign In
+            </button>
+
+            <!-- Quick Demo Credentials -->
+            <div class="pt-3 border-top border-secondary border-opacity-25">
+                <div class="text-center mb-2">
+                    <span class="small text-secondary fw-semibold text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.05em;">
+                        Quick 1-Click Demo Login
+                    </span>
+                </div>
+                <div class="d-flex gap-2 justify-content-center flex-wrap">
+                    <button type="button" class="demo-btn" onclick="fillCredentials('admin@cms.com', 'Admin@123')">
+                        <i class="bi bi-shield-lock-fill text-danger me-1"></i> Admin
+                    </button>
+                    <button type="button" class="demo-btn" onclick="fillCredentials('teacher@cms.com', 'Teacher@123')">
+                        <i class="bi bi-person-video3 text-warning me-1"></i> Teacher
+                    </button>
+                    <button type="button" class="demo-btn" onclick="fillCredentials('student@cms.com', 'Student@123')">
+                        <i class="bi bi-backpack4-fill text-info me-1"></i> Student
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function fillCredentials(email, password) {
+            document.getElementById('emailInput').value = email;
+            document.getElementById('passwordInput').value = password;
+        }
+    </script>
+</body>
+</html>
