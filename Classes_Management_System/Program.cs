@@ -2,7 +2,6 @@ using CMS_BAL.Services.Implementations;
 using CMS_BAL.Services.Interfaces;
 using CMS_DAL;
 using CMS_DAL.Connection;
-using CMS_DAL.Helper;
 using CMS_DAL.Repositories.Implementations;
 using CMS_DAL.Repositories.Interfaces;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -18,7 +17,6 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 
 // Register ADO.NET and Repositories
 builder.Services.AddSingleton<IDbConnectionFactory>(new DbConnectionFactory(connectionString));
-builder.Services.AddScoped<SqlHelper>();
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
