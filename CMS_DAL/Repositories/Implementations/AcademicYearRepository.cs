@@ -1,69 +1,75 @@
-using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
-using CMS_DAL.Helper;
+using CMS_DAL.Connection;
 using CMS_DAL.Models;
 using CMS_DAL.Repositories.Interfaces;
-using Microsoft.Data.SqlClient;
+using Dapper;
 
 namespace CMS_DAL.Repositories.Implementations
 {
     public class AcademicYearRepository : IAcademicYearRepository
     {
-        private readonly SqlHelper _sqlHelper;
+        private readonly IDbConnectionFactory _connectionFactory;
 
-        public AcademicYearRepository(SqlHelper sqlHelper)
+        public AcademicYearRepository(IDbConnectionFactory connectionFactory)
         {
-            _sqlHelper = sqlHelper;
+            _connectionFactory = connectionFactory;
         }
+
+        private IDbConnection connection() => _connectionFactory.CreateConnection();
 
         public async Task<AcademicYear?> GetCurrentAcademicYearAsync()
         {
-            return await _sqlHelper.ExecuteSingleAsync("sp_GetCurrentAcademicYear", MapAcademicYear, null, CommandType.StoredProcedure);
+            using (IDbConnection con = connection())
+            {
+                return await con.QueryFirstOrDefaultAsync<AcademicYear>(
+                    "sp_GetCurrentAcademicYear", 
+                    commandType: CommandType.StoredProcedure);
+            }
         }
 
         public async Task<IEnumerable<AcademicYear>> GetAllAsync()
         {
-            return await _sqlHelper.ExecuteQueryAsync("sp_GetAllAcademicYears", MapAcademicYear, null, CommandType.StoredProcedure);
+            using (IDbConnection con = connection())
+            {
+                return await con.QueryAsync<AcademicYear>(
+                    "sp_GetAllAcademicYears", 
+                    commandType: CommandType.StoredProcedure);
+            }
         }
 
         public async Task<int> CreateAsync(AcademicYear year)
         {
-            var parameters = new[]
+            using (IDbConnection con = connection())
             {
-                new SqlParameter("@YearName", SqlDbType.NVarChar, 50) { Value = year.YearName },
-                new SqlParameter("@StartDate", SqlDbType.Date) { Value = year.StartDate },
-                new SqlParameter("@EndDate", SqlDbType.Date) { Value = year.EndDate },
-                new SqlParameter("@IsCurrent", SqlDbType.Bit) { Value = year.IsCurrent }
-            };
+                DynamicParameters parms = new DynamicParameters();
+                parms.Add("@YearName", year.YearName);
+                parms.Add("@StartDate", year.StartDate);
+                parms.Add("@EndDate", year.EndDate);
+                parms.Add("@IsCurrent", year.IsCurrent);
 
-            var result = await _sqlHelper.ExecuteScalarAsync("sp_CreateAcademicYear", parameters, CommandType.StoredProcedure);
-            return result != null && result != DBNull.Value ? Convert.ToInt32(result) : 0;
+                return await con.QuerySingleOrDefaultAsync<int>(
+                    "sp_CreateAcademicYear", 
+                    parms, 
+                    commandType: CommandType.StoredProcedure);
+            }
         }
 
         public async Task<bool> SetCurrentAcademicYearAsync(int academicYearId)
         {
-            var parameters = new[]
+            using (IDbConnection con = connection())
             {
-                new SqlParameter("@AcademicYearId", SqlDbType.Int) { Value = academicYearId }
-            };
+                DynamicParameters parms = new DynamicParameters();
+                parms.Add("@AcademicYearId", academicYearId);
 
-            var result = await _sqlHelper.ExecuteScalarAsync("sp_SetCurrentAcademicYear", parameters, CommandType.StoredProcedure);
-            return result != null && Convert.ToInt32(result) > 0;
-        }
+                int rows = await con.QuerySingleOrDefaultAsync<int>(
+                    "sp_SetCurrentAcademicYear", 
+                    parms, 
+                    commandType: CommandType.StoredProcedure);
 
-        private static AcademicYear MapAcademicYear(SqlDataReader reader)
-        {
-            return new AcademicYear
-            {
-                AcademicYearId = Convert.ToInt32(reader["AcademicYearId"]),
-                YearName = reader["YearName"].ToString() ?? string.Empty,
-                StartDate = Convert.ToDateTime(reader["StartDate"]),
-                EndDate = Convert.ToDateTime(reader["EndDate"]),
-                IsCurrent = Convert.ToBoolean(reader["IsCurrent"]),
-                CreatedAt = Convert.ToDateTime(reader["CreatedAt"])
-            };
+                return rows > 0;
+            }
         }
     }
 }

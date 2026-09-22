@@ -1,64 +1,65 @@
-using System;
 using System.Data;
 using System.Threading.Tasks;
-using CMS_DAL.Helper;
+using CMS_DAL.Connection;
 using CMS_DAL.Models;
 using CMS_DAL.Repositories.Interfaces;
-using Microsoft.Data.SqlClient;
+using Dapper;
 
 namespace CMS_DAL.Repositories.Implementations
 {
     public class DashboardRepository : IDashboardRepository
     {
-        private readonly SqlHelper _sqlHelper;
+        private readonly IDbConnectionFactory _connectionFactory;
 
-        public DashboardRepository(SqlHelper sqlHelper)
+        public DashboardRepository(IDbConnectionFactory connectionFactory)
         {
-            _sqlHelper = sqlHelper;
+            _connectionFactory = connectionFactory;
         }
+
+        private IDbConnection connection() => _connectionFactory.CreateConnection();
 
         public async Task<AdminDashboardStats> GetAdminStatsAsync()
         {
-            return await _sqlHelper.ExecuteSingleAsync("sp_GetAdminDashboardStats", reader => new AdminDashboardStats
+            using (IDbConnection con = connection())
             {
-                TotalStudents = Convert.ToInt32(reader["TotalStudents"]),
-                TotalTeachers = Convert.ToInt32(reader["TotalTeachers"]),
-                TotalCourses = Convert.ToInt32(reader["TotalCourses"]),
-                TotalBatches = Convert.ToInt32(reader["TotalBatches"]),
-                PendingFeeApprovals = Convert.ToInt32(reader["PendingFeeApprovals"]),
-                TotalCollectedRevenue = Convert.ToDecimal(reader["TotalCollectedRevenue"]),
-                PendingFeesAmount = Convert.ToDecimal(reader["PendingFeesAmount"]),
-                ActiveInquiries = Convert.ToInt32(reader["ActiveInquiries"])
-            }, null, CommandType.StoredProcedure) ?? new AdminDashboardStats();
+                var stats = await con.QueryFirstOrDefaultAsync<AdminDashboardStats>(
+                    "sp_GetAdminDashboardStats", 
+                    commandType: CommandType.StoredProcedure);
+
+                return stats ?? new AdminDashboardStats();
+            }
         }
 
         public async Task<TeacherDashboardStats> GetTeacherStatsAsync(int userId)
         {
-            var parameters = new[] { new SqlParameter("@UserId", SqlDbType.Int) { Value = userId } };
-
-            return await _sqlHelper.ExecuteSingleAsync("sp_GetTeacherDashboardStats", reader => new TeacherDashboardStats
+            using (IDbConnection con = connection())
             {
-                MyBatchesCount = Convert.ToInt32(reader["MyBatchesCount"]),
-                TotalStudentsEnrolled = Convert.ToInt32(reader["TotalStudentsEnrolled"]),
-                TodayLecturesCount = Convert.ToInt32(reader["TodayLecturesCount"]),
-                UpcomingExamsCount = Convert.ToInt32(reader["UpcomingExamsCount"])
-            }, parameters, CommandType.StoredProcedure) ?? new TeacherDashboardStats();
+                DynamicParameters parms = new DynamicParameters();
+                parms.Add("@UserId", userId);
+
+                var stats = await con.QueryFirstOrDefaultAsync<TeacherDashboardStats>(
+                    "sp_GetTeacherDashboardStats", 
+                    parms, 
+                    commandType: CommandType.StoredProcedure);
+
+                return stats ?? new TeacherDashboardStats();
+            }
         }
 
         public async Task<StudentDashboardStats> GetStudentStatsAsync(int userId)
         {
-            var parameters = new[] { new SqlParameter("@UserId", SqlDbType.Int) { Value = userId } };
-
-            return await _sqlHelper.ExecuteSingleAsync("sp_GetStudentDashboardStats", reader => new StudentDashboardStats
+            using (IDbConnection con = connection())
             {
-                BatchName = reader["BatchName"].ToString() ?? "Not Assigned",
-                CourseName = reader["CourseName"].ToString() ?? "N/A",
-                TotalFees = Convert.ToDecimal(reader["TotalFees"]),
-                PaidFees = Convert.ToDecimal(reader["PaidFees"]),
-                PendingFees = Convert.ToDecimal(reader["PendingFees"]),
-                PendingPaymentReviews = Convert.ToInt32(reader["PendingPaymentReviews"]),
-                AttendancePercentage = Math.Round(Convert.ToDecimal(reader["AttendancePercentage"]), 1)
-            }, parameters, CommandType.StoredProcedure) ?? new StudentDashboardStats();
+                DynamicParameters parms = new DynamicParameters();
+                parms.Add("@UserId", userId);
+
+                var stats = await con.QueryFirstOrDefaultAsync<StudentDashboardStats>(
+                    "sp_GetStudentDashboardStats", 
+                    parms, 
+                    commandType: CommandType.StoredProcedure);
+
+                return stats ?? new StudentDashboardStats();
+            }
         }
     }
 }

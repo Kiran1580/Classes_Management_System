@@ -1,47 +1,60 @@
-using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
-using CMS_DAL.Helper;
+using CMS_DAL.Connection;
 using CMS_DAL.Models;
 using CMS_DAL.Repositories.Interfaces;
-using Microsoft.Data.SqlClient;
+using Dapper;
 
 namespace CMS_DAL.Repositories.Implementations
 {
     public class RoleRepository : IRoleRepository
     {
-        private readonly SqlHelper _sqlHelper;
+        private readonly IDbConnectionFactory _connectionFactory;
 
-        public RoleRepository(SqlHelper sqlHelper)
+        public RoleRepository(IDbConnectionFactory connectionFactory)
         {
-            _sqlHelper = sqlHelper;
+            _connectionFactory = connectionFactory;
         }
+
+        private IDbConnection connection() => _connectionFactory.CreateConnection();
 
         public async Task<IEnumerable<Role>> GetAllRolesAsync()
         {
-            return await _sqlHelper.ExecuteQueryAsync("sp_GetAllRoles", MapRole, null, CommandType.StoredProcedure);
+            using (IDbConnection con = connection())
+            {
+                return await con.QueryAsync<Role>(
+                    "sp_GetAllRoles", 
+                    commandType: CommandType.StoredProcedure);
+            }
         }
 
         public async Task<Role?> GetByIdAsync(int roleId)
         {
-            var parameters = new[] { new SqlParameter("@RoleId", SqlDbType.Int) { Value = roleId } };
-            return await _sqlHelper.ExecuteSingleAsync("sp_GetRoleById", MapRole, parameters, CommandType.StoredProcedure);
+            using (IDbConnection con = connection())
+            {
+                DynamicParameters parms = new DynamicParameters();
+                parms.Add("@RoleId", roleId);
+
+                return await con.QueryFirstOrDefaultAsync<Role>(
+                    "sp_GetRoleById", 
+                    parms, 
+                    commandType: CommandType.StoredProcedure);
+            }
         }
 
         public async Task<Role?> GetByNameAsync(string roleName)
         {
-            var parameters = new[] { new SqlParameter("@RoleName", SqlDbType.NVarChar, 50) { Value = roleName.Trim() } };
-            return await _sqlHelper.ExecuteSingleAsync("sp_GetRoleByName", MapRole, parameters, CommandType.StoredProcedure);
-        }
-
-        private static Role MapRole(SqlDataReader reader)
-        {
-            return new Role
+            using (IDbConnection con = connection())
             {
-                RoleId = Convert.ToInt32(reader["RoleId"]),
-                RoleName = reader["RoleName"].ToString() ?? string.Empty
-            };
+                DynamicParameters parms = new DynamicParameters();
+                parms.Add("@RoleName", roleName.Trim());
+
+                return await con.QueryFirstOrDefaultAsync<Role>(
+                    "sp_GetRoleByName", 
+                    parms, 
+                    commandType: CommandType.StoredProcedure);
+            }
         }
     }
 }
