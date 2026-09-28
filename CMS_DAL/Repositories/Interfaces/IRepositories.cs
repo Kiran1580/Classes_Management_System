@@ -12,6 +12,11 @@ namespace CMS_DAL.Repositories.Interfaces
         Task<bool> UpdatePasswordAsync(int userId, string passwordHash);
         Task<bool> EmailExistsAsync(string email);
         Task<IEnumerable<User>> GetAllUsersByRoleAsync(string roleName);
+        Task<int> RegisterStudentAsync(string fullName, string email, string? mobile, string passwordHash, string? parentName, string? parentMobile);
+        Task<int> RegisterTeacherAsync(string fullName, string email, string? mobile, string passwordHash, string? qualification, string? subjectSpecialization);
+        Task<IEnumerable<PendingRegistrationUser>> GetPendingRegistrationsAsync();
+        Task<bool> ApproveUserAsync(int userId);
+        Task<bool> RejectUserAsync(int userId);
     }
 
     public interface IRoleRepository

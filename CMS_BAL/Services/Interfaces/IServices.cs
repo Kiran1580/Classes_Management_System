@@ -9,6 +9,11 @@ namespace CMS_BAL.Services.Interfaces
         Task<(bool Success, string Message, User? User)> ValidateUserAsync(LoginViewModel model);
         Task<User?> GetUserByIdAsync(int userId);
         Task<User?> GetUserByEmailAsync(string email);
+        Task<(bool Success, string Message)> RegisterStudentAsync(StudentRegisterViewModel model);
+        Task<(bool Success, string Message)> RegisterTeacherAsync(TeacherRegisterViewModel model);
+        Task<System.Collections.Generic.IEnumerable<PendingRegistrationUser>> GetPendingRegistrationsAsync();
+        Task<(bool Success, string Message)> ApproveUserAsync(int userId);
+        Task<(bool Success, string Message)> RejectUserAsync(int userId);
     }
 
     public interface IDashboardService

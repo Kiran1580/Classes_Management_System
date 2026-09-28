@@ -1,0 +1,129 @@
+@model IEnumerable<CMS_DAL.Models.PendingRegistrationUser>
+@{
+    ViewData["Title"] = "Registration Approvals";
+}
+
+<div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3 mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">Registration Approvals</h4>
+        <p class="text-secondary small mb-0">Review, verify, and activate pending Student and Faculty self-registrations</p>
+    </div>
+    <div>
+        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-semibold">
+            <i class="bi bi-clock-history me-1"></i> @(Model?.Count() ?? 0) Pending Verification
+        </span>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show rounded-3 small mb-4 d-flex align-items-center gap-2" role="alert">
+        <i class="bi bi-check-circle-fill text-success fs-5"></i>
+        <div>@TempData["SuccessMessage"]</div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show rounded-3 small mb-4 d-flex align-items-center gap-2" role="alert">
+        <i class="bi bi-exclamation-triangle-fill text-danger fs-5"></i>
+        <div>@TempData["ErrorMessage"]</div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="card border-0 shadow-sm rounded-3">
+    <div class="card-header bg-white py-3 border-0 d-flex align-items-center justify-content-between">
+        <h6 class="mb-0 fw-bold">
+            <i class="bi bi-person-check-fill text-primary me-2"></i>Pending Applications
+        </h6>
+    </div>
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="card-body text-center py-5">
+            <div class="rounded-circle bg-success bg-opacity-10 d-inline-flex p-3 text-success mb-3 fs-2">
+                <i class="bi bi-check-circle"></i>
+            </div>
+            <h5 class="fw-bold text-dark mb-1">All Caught Up!</h5>
+            <p class="text-secondary small mb-0">There are no pending registrations requiring review at this moment.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light small text-uppercase text-secondary">
+                    <tr>
+                        <th class="ps-3" style="font-size: 0.72rem;">Applicant</th>
+                        <th style="font-size: 0.72rem;">Role / Type</th>
+                        <th style="font-size: 0.72rem;">Contact Details</th>
+                        <th style="font-size: 0.72rem;">Reference / Extra Info</th>
+                        <th style="font-size: 0.72rem;">Applied Date</th>
+                        <th class="text-end pe-3" style="font-size: 0.72rem;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="small">
+                    @foreach (var user in Model)
+                    {
+                        <tr>
+                            <td class="ps-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="rounded-circle @(user.RoleName == "Teacher" ? "bg-warning bg-opacity-10 text-warning" : "bg-primary bg-opacity-10 text-primary") d-flex align-items-center justify-content-center fw-bold" style="width: 38px; height: 38px; font-size: 0.9rem;">
+                                        @(user.FullName.Length > 0 ? user.FullName[0].ToString().ToUpper() : "U")
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark">@user.FullName</div>
+                                        <div class="text-muted" style="font-size: 0.75rem;">@user.Email</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                @if (user.RoleName == "Teacher")
+                                {
+                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1 rounded-pill">
+                                        <i class="bi bi-person-video3 me-1"></i> Faculty / Teacher
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 rounded-pill">
+                                        <i class="bi bi-mortarboard me-1"></i> Student
+                                    </span>
+                                }
+                            </td>
+                            <td>
+                                <div><i class="bi bi-telephone text-secondary me-1"></i>@(string.IsNullOrWhiteSpace(user.Mobile) ? "N/A" : user.Mobile)</div>
+                            </td>
+                            <td>
+                                <div class="fw-semibold text-dark">@user.ReferenceCode</div>
+                                <div class="text-muted" style="font-size: 0.75rem;">@user.ExtraInfo</div>
+                            </td>
+                            <td>
+                                <div class="text-muted">@user.CreatedAt.ToString("dd MMM yyyy")</div>
+                                <div class="text-muted" style="font-size: 0.75rem;">@user.CreatedAt.ToString("hh:mm tt")</div>
+                            </td>
+                            <td class="text-end pe-3">
+                                <div class="d-inline-flex gap-1">
+                                    <form asp-area="Admin" asp-controller="UserApproval" asp-action="Approve" asp-route-id="@user.UserId" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to approve this @user.RoleName?');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-success px-2 py-1 rounded-2" title="Approve & Activate Account">
+                                            <i class="bi bi-check-lg me-1"></i> Approve
+                                        </button>
+                                    </form>
+                                    <form asp-area="Admin" asp-controller="UserApproval" asp-action="Reject" asp-route-id="@user.UserId" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to reject and remove this application?');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-outline-danger px-2 py-1 rounded-2" title="Reject Application">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

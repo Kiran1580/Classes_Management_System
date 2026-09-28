@@ -165,11 +165,24 @@
             <p class="text-light text-opacity-75 small mb-0">Sign in to access your portal</p>
         </div>
 
-        @if (!ViewData.ModelState.IsValid)
+        @if (TempData["SuccessMessage"] != null)
         {
-            <div class="alert alert-danger py-2 px-3 small rounded-3 mb-3" role="alert">
-                <i class="bi bi-exclamation-triangle-fill me-1"></i>
-                @Html.ValidationSummary(true, "")
+            <div class="alert alert-success py-2 px-3 small rounded-3 mb-3 d-flex align-items-center gap-2" role="alert">
+                <i class="bi bi-check-circle-fill fs-5 text-success"></i>
+                <div>@TempData["SuccessMessage"]</div>
+            </div>
+        }
+
+        @if (ViewData.ModelState.TryGetValue(string.Empty, out var modelErrors) && modelErrors.Errors.Count > 0)
+        {
+            <div class="alert alert-danger py-2 px-3 small rounded-3 mb-3 d-flex align-items-center gap-2" role="alert">
+                <i class="bi bi-exclamation-triangle-fill flex-shrink-0"></i>
+                <div>
+                    @foreach (var err in modelErrors.Errors)
+                    {
+                        <div>@err.ErrorMessage</div>
+                    }
+                </div>
             </div>
         }
 
@@ -215,9 +228,26 @@
             </div>
 
             <!-- Submit Button -->
-            <button type="submit" class="btn btn-login w-100">
+            <button type="submit" class="btn btn-login w-100 mb-4">
                 <i class="bi bi-box-arrow-in-right me-1"></i> Sign In
             </button>
+
+            <!-- Registration Links -->
+            <div class="pt-3 border-top border-secondary border-opacity-25 text-center">
+                <div class="text-light text-opacity-75 small mb-2">Don't have an account yet?</div>
+                <div class="row g-2">
+                    <div class="col-6">
+                        <a asp-action="RegisterStudent" class="btn btn-outline-info w-100 py-2 rounded-3 text-truncate small">
+                            <i class="bi bi-mortarboard me-1"></i> Student Register
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a asp-action="RegisterTeacher" class="btn btn-outline-warning w-100 py-2 rounded-3 text-truncate small">
+                            <i class="bi bi-person-video3 me-1"></i> Teacher Register
+                        </a>
+                    </div>
+                </div>
+            </div>
         </form>
     </div>
 

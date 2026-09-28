@@ -78,6 +78,70 @@ namespace Classes_Management_System.Controllers
             return RedirectUserByRole(user.RoleName);
         }
 
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult RegisterStudent()
+        {
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                return RedirectUserByRole();
+            }
+            return View(new StudentRegisterViewModel());
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RegisterStudent(StudentRegisterViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var (success, message) = await _authService.RegisterStudentAsync(model);
+            if (!success)
+            {
+                ModelState.AddModelError(string.Empty, message);
+                return View(model);
+            }
+
+            TempData["SuccessMessage"] = message;
+            return RedirectToAction(nameof(Login));
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult RegisterTeacher()
+        {
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                return RedirectUserByRole();
+            }
+            return View(new TeacherRegisterViewModel());
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RegisterTeacher(TeacherRegisterViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var (success, message) = await _authService.RegisterTeacherAsync(model);
+            if (!success)
+            {
+                ModelState.AddModelError(string.Empty, message);
+                return View(model);
+            }
+
+            TempData["SuccessMessage"] = message;
+            return RedirectToAction(nameof(Login));
+        }
+
         [HttpPost]
         [HttpGet]
         public async Task<IActionResult> Logout()

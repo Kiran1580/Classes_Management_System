@@ -112,5 +112,85 @@ namespace CMS_DAL.Repositories.Implementations
                     commandType: CommandType.StoredProcedure);
             }
         }
+
+        public async Task<int> RegisterStudentAsync(string fullName, string email, string? mobile, string passwordHash, string? parentName, string? parentMobile)
+        {
+            using (IDbConnection con = connection())
+            {
+                DynamicParameters parms = new DynamicParameters();
+                parms.Add("@FullName", fullName.Trim());
+                parms.Add("@Email", email.Trim());
+                parms.Add("@Mobile", mobile?.Trim());
+                parms.Add("@PasswordHash", passwordHash);
+                parms.Add("@ParentName", parentName?.Trim());
+                parms.Add("@ParentMobile", parentMobile?.Trim());
+
+                return await con.QuerySingleOrDefaultAsync<int>(
+                    "sp_RegisterStudent",
+                    parms,
+                    commandType: CommandType.StoredProcedure);
+            }
+        }
+
+        public async Task<int> RegisterTeacherAsync(string fullName, string email, string? mobile, string passwordHash, string? qualification, string? subjectSpecialization)
+        {
+            using (IDbConnection con = connection())
+            {
+                DynamicParameters parms = new DynamicParameters();
+                parms.Add("@FullName", fullName.Trim());
+                parms.Add("@Email", email.Trim());
+                parms.Add("@Mobile", mobile?.Trim());
+                parms.Add("@PasswordHash", passwordHash);
+                parms.Add("@Qualification", qualification?.Trim());
+                parms.Add("@SubjectSpecialization", subjectSpecialization?.Trim());
+
+                return await con.QuerySingleOrDefaultAsync<int>(
+                    "sp_RegisterTeacher",
+                    parms,
+                    commandType: CommandType.StoredProcedure);
+            }
+        }
+
+        public async Task<IEnumerable<PendingRegistrationUser>> GetPendingRegistrationsAsync()
+        {
+            using (IDbConnection con = connection())
+            {
+                return await con.QueryAsync<PendingRegistrationUser>(
+                    "sp_GetPendingRegistrations",
+                    commandType: CommandType.StoredProcedure);
+            }
+        }
+
+        public async Task<bool> ApproveUserAsync(int userId)
+        {
+            using (IDbConnection con = connection())
+            {
+                DynamicParameters parms = new DynamicParameters();
+                parms.Add("@UserId", userId);
+
+                int result = await con.QuerySingleOrDefaultAsync<int>(
+                    "sp_ApproveUser",
+                    parms,
+                    commandType: CommandType.StoredProcedure);
+
+                return result > 0;
+            }
+        }
+
+        public async Task<bool> RejectUserAsync(int userId)
+        {
+            using (IDbConnection con = connection())
+            {
+                DynamicParameters parms = new DynamicParameters();
+                parms.Add("@UserId", userId);
+
+                int result = await con.QuerySingleOrDefaultAsync<int>(
+                    "sp_RejectUser",
+                    parms,
+                    commandType: CommandType.StoredProcedure);
+
+                return result > 0;
+            }
+        }
     }
 }

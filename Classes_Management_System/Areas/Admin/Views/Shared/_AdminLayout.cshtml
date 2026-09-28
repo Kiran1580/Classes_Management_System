@@ -1,4 +1,9 @@
 @using System.Security.Claims
+@inject CMS_BAL.Services.Interfaces.IAuthService AuthService
+@{
+    var pendingRegistrations = (await AuthService.GetPendingRegistrationsAsync())?.ToList() ?? new List<CMS_DAL.Models.PendingRegistrationUser>();
+    var pendingCount = pendingRegistrations.Count;
+}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -198,6 +203,9 @@
             </a>
 
             <div class="nav-section-title">People & Admissions</div>
+            <a asp-area="Admin" asp-controller="UserApproval" asp-action="Index" class="sidebar-link" title="User Registrations Approval">
+                <i class="bi bi-person-check"></i> Registrations Approval
+            </a>
             <a href="#" class="sidebar-link" title="Inquiries CRM">
                 <i class="bi bi-funnel"></i> Inquiries (CRM)
             </a>
@@ -245,6 +253,71 @@
                 <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 rounded-pill d-none d-sm-inline-block">
                     <i class="bi bi-shield-check me-1"></i> Admin
                 </span>
+
+                <!-- Notification Bell Dropdown -->
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-light border position-relative p-0 rounded-circle d-flex align-items-center justify-content-center shadow-none" 
+                            style="width: 38px; height: 38px; background-color: #ffffff;" 
+                            type="button" 
+                            id="notificationDropdownBtn" 
+                            data-bs-toggle="dropdown" 
+                            aria-expanded="false" 
+                            title="Notifications">
+                        <i class="bi bi-bell fs-5 text-dark"></i>
+                        @if (pendingCount > 0)
+                        {
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white" style="font-size: 0.65rem; padding: 0.3em 0.55em;">
+                                @pendingCount
+                                <span class="visually-hidden">unread notifications</span>
+                            </span>
+                        }
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end shadow-lg p-0 rounded-3 border-0 mt-2" style="width: 330px; max-width: 92vw;">
+                        <div class="p-3 bg-light border-bottom d-flex align-items-center justify-content-between rounded-top-3">
+                            <span class="fw-bold small text-dark"><i class="bi bi-bell-fill text-warning me-1"></i> Notifications</span>
+                            @if (pendingCount > 0)
+                            {
+                                <span class="badge bg-warning text-dark rounded-pill" style="font-size: 0.72rem;">@pendingCount Pending</span>
+                            }
+                        </div>
+                        <div style="max-height: 290px; overflow-y: auto;">
+                            @if (pendingCount == 0)
+                            {
+                                <div class="p-4 text-center text-muted small">
+                                    <i class="bi bi-check-circle text-success fs-3 d-block mb-1"></i>
+                                    <div>No new notifications</div>
+                                    <span class="text-secondary" style="font-size: 0.75rem;">All registrations are reviewed!</span>
+                                </div>
+                            }
+                            else
+                            {
+                                @foreach (var user in pendingRegistrations.Take(5))
+                                {
+                                    <a asp-area="Admin" asp-controller="UserApproval" asp-action="Index" class="dropdown-item py-2 px-3 border-bottom d-flex align-items-start gap-2 text-wrap">
+                                        <div class="rounded-circle @(user.RoleName == "Teacher" ? "bg-warning bg-opacity-10 text-warning" : "bg-primary bg-opacity-10 text-primary") d-flex align-items-center justify-content-center flex-shrink-0 mt-1" style="width: 30px; height: 30px; font-size: 0.8rem;">
+                                            <i class="bi @(user.RoleName == "Teacher" ? "bi-person-video3" : "bi-mortarboard")"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <span class="fw-semibold text-dark small" style="font-size: 0.8rem;">@user.FullName</span>
+                                                <span class="badge @(user.RoleName == "Teacher" ? "bg-warning-subtle text-warning" : "bg-primary-subtle text-primary") px-1 py-0 rounded" style="font-size: 0.65rem;">@user.RoleName</span>
+                                            </div>
+                                            <div class="text-secondary text-truncate" style="font-size: 0.72rem; max-width: 220px;">@user.Email</div>
+                                            <div class="text-muted" style="font-size: 0.68rem;"><i class="bi bi-clock me-1"></i>@user.CreatedAt.ToString("dd MMM, hh:mm tt")</div>
+                                        </div>
+                                    </a>
+                                }
+                            }
+                        </div>
+                        <div class="p-2 text-center bg-light border-top rounded-bottom-3">
+                            <a asp-area="Admin" asp-controller="UserApproval" asp-action="Index" class="text-primary text-decoration-none small fw-semibold" style="font-size: 0.8rem;">
+                                View All Approvals (@pendingCount) <i class="bi bi-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Profile Dropdown -->
                 <div class="dropdown">
                     <button class="btn btn-sm btn-outline-secondary dropdown-toggle d-flex align-items-center gap-1 gap-sm-2" type="button" data-bs-toggle="dropdown">
                         <i class="bi bi-person-circle"></i>

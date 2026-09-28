@@ -3,6 +3,17 @@
     ViewData["Title"] = "Student Portal";
 }
 
+<style>
+    .stat-card {
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+        cursor: default;
+    }
+    .stat-card:hover {
+        transform: translateY(-6px) scale(1.03);
+        box-shadow: 0 14px 32px rgba(0, 0, 0, 0.14) !important;
+    }
+</style>
+
 <div class="card border-0 shadow-sm rounded-4 p-4 text-white mb-4" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);">
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
         <div>
@@ -23,7 +34,7 @@
 <div class="row g-3 mb-4">
     <!-- Attendance -->
     <div class="col-12 col-md-3">
-        <div class="card border-0 shadow-sm rounded-3 p-3 text-center">
+        <div class="card border-0 shadow-sm rounded-3 p-3 text-center stat-card">
             <div class="text-secondary small fw-semibold text-uppercase">Attendance</div>
             <div class="fs-2 fw-bold text-primary mt-1">@Model.AttendancePercentage%</div>
             <small class="text-success">Overall Attendance</small>
@@ -32,7 +43,7 @@
 
     <!-- Total Fees -->
     <div class="col-12 col-md-3">
-        <div class="card border-0 shadow-sm rounded-3 p-3 text-center">
+        <div class="card border-0 shadow-sm rounded-3 p-3 text-center stat-card">
             <div class="text-secondary small fw-semibold text-uppercase">Total Course Fee</div>
             <div class="fs-2 fw-bold text-dark mt-1">₹@Model.TotalFees.ToString("N0")</div>
             <small class="text-muted">Assigned fee</small>
@@ -41,7 +52,7 @@
 
     <!-- Paid Fees -->
     <div class="col-12 col-md-3">
-        <div class="card border-0 shadow-sm rounded-3 p-3 text-center">
+        <div class="card border-0 shadow-sm rounded-3 p-3 text-center stat-card">
             <div class="text-secondary small fw-semibold text-uppercase">Fees Paid</div>
             <div class="fs-2 fw-bold text-success mt-1">₹@Model.PaidFees.ToString("N0")</div>
             <small class="text-success"><i class="bi bi-check-circle"></i> Verified & Paid</small>
@@ -50,7 +61,7 @@
 
     <!-- Pending Fees -->
     <div class="col-12 col-md-3">
-        <div class="card border-0 shadow-sm rounded-3 p-3 text-center">
+        <div class="card border-0 shadow-sm rounded-3 p-3 text-center stat-card">
             <div class="text-secondary small fw-semibold text-uppercase">Balance Due</div>
             <div class="fs-2 fw-bold text-danger mt-1">₹@Model.PendingFees.ToString("N0")</div>
             @if (Model.PendingPaymentReviews > 0)

@@ -31,7 +31,7 @@ namespace CMS_BAL.Services.Implementations
 
             if (!user.IsActive)
             {
-                return (false, "Your account is deactivated. Please contact administrator.", null);
+                return (false, "Your account is pending Admin approval. You will be able to log in once an Administrator verifies and activates your account.", null);
             }
 
             bool isPasswordValid = false;
@@ -67,6 +67,81 @@ namespace CMS_BAL.Services.Implementations
         public async Task<User?> GetUserByEmailAsync(string email)
         {
             return await _userRepository.GetByEmailAsync(email);
+        }
+
+        public async Task<(bool Success, string Message)> RegisterStudentAsync(StudentRegisterViewModel model)
+        {
+            if (await _userRepository.EmailExistsAsync(model.Email))
+            {
+                return (false, "An account with this email address already exists.");
+            }
+
+            var passwordHash = BCrypt.Net.BCrypt.HashPassword(model.Password);
+
+            int userId = await _userRepository.RegisterStudentAsync(
+                model.FullName,
+                model.Email,
+                model.Mobile,
+                passwordHash,
+                model.ParentName,
+                model.ParentMobile);
+
+            if (userId <= 0)
+            {
+                return (false, "Registration could not be completed. Please try again.");
+            }
+
+            return (true, "Student registration submitted successfully! Your account will be activated once approved by Administrator.");
+        }
+
+        public async Task<(bool Success, string Message)> RegisterTeacherAsync(TeacherRegisterViewModel model)
+        {
+            if (await _userRepository.EmailExistsAsync(model.Email))
+            {
+                return (false, "An account with this email address already exists.");
+            }
+
+            var passwordHash = BCrypt.Net.BCrypt.HashPassword(model.Password);
+
+            int userId = await _userRepository.RegisterTeacherAsync(
+                model.FullName,
+                model.Email,
+                model.Mobile,
+                passwordHash,
+                model.Qualification,
+                model.SubjectSpecialization);
+
+            if (userId <= 0)
+            {
+                return (false, "Registration could not be completed. Please try again.");
+            }
+
+            return (true, "Faculty registration submitted successfully! Your account will be activated once approved by Administrator.");
+        }
+
+        public async Task<System.Collections.Generic.IEnumerable<PendingRegistrationUser>> GetPendingRegistrationsAsync()
+        {
+            return await _userRepository.GetPendingRegistrationsAsync();
+        }
+
+        public async Task<(bool Success, string Message)> ApproveUserAsync(int userId)
+        {
+            bool approved = await _userRepository.ApproveUserAsync(userId);
+            if (approved)
+            {
+                return (true, "Account approved and activated successfully.");
+            }
+            return (false, "Failed to approve account. Please try again.");
+        }
+
+        public async Task<(bool Success, string Message)> RejectUserAsync(int userId)
+        {
+            bool rejected = await _userRepository.RejectUserAsync(userId);
+            if (rejected)
+            {
+                return (true, "Registration request rejected and removed.");
+            }
+            return (false, "Failed to reject request. Please try again.");
         }
     }
 

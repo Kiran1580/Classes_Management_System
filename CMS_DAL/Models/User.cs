@@ -15,4 +15,18 @@ namespace CMS_DAL.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
     }
+
+    public class PendingRegistrationUser
+    {
+        public int UserId { get; set; }
+        public string FullName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string? Mobile { get; set; }
+        public int RoleId { get; set; }
+        public string RoleName { get; set; } = string.Empty;
+        public bool IsActive { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public string? ExtraInfo { get; set; }
+        public string? ReferenceCode { get; set; }
+    }
 }
