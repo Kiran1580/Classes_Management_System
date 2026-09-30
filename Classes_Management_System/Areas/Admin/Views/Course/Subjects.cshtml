@@ -1,0 +1,539 @@
+@model CMS_BAL.ViewModels.PagedResult<CMS_BAL.ViewModels.SubjectViewModel>
+@{
+    ViewData["Title"] = "Subjects Directory";
+    string currentSearchValue = Model.SearchTerm ?? "";
+    string currentSortBy = Model.SortColumn ?? "Name";
+    string currentSortOrder = Model.SortDirection ?? "ASC";
+    int totalCourses = ViewBag.TotalCourses ?? 0;
+    int activeCourses = ViewBag.ActiveCourses ?? 0;
+    int totalSubjects = ViewBag.TotalSubjects ?? Model.TotalCount;
+}
+
+<style>
+    /* Card & Animation Styles */
+    .stat-metric-card {
+        background: #ffffff;
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        border-radius: 1rem;
+        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    .stat-metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.08) !important;
+    }
+    .stat-metric-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+    }
+    .metric-courses::before { background: linear-gradient(90deg, #3b82f6, #6366f1); }
+    .metric-active::before { background: linear-gradient(90deg, #10b981, #059669); }
+    .metric-subjects::before { background: linear-gradient(90deg, #8b5cf6, #ec4899); }
+
+    .icon-box {
+        width: 52px;
+        height: 52px;
+        border-radius: 0.85rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        color: white;
+        box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.15);
+    }
+    .icon-courses { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+    .icon-active { background: linear-gradient(135deg, #10b981, #047857); }
+    .icon-subjects { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+
+    /* Hero Banner */
+    .hero-banner {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #172554 100%);
+        border-radius: 1.25rem;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.3);
+    }
+    .hero-banner::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .pulse-dot {
+        width: 8px;
+        height: 8px;
+        background: #10b981;
+        border-radius: 50%;
+        display: inline-block;
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+        animation: pulse-green 2s infinite;
+    }
+    @@keyframes pulse-green {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    /* Modern Tabs Switcher */
+    .nav-pills-modern {
+        background: #f1f5f9;
+        padding: 0.35rem;
+        border-radius: 0.75rem;
+        display: inline-flex;
+    }
+    .nav-pills-modern .nav-link {
+        border-radius: 0.5rem;
+        color: #64748b;
+        font-weight: 600;
+        font-size: 0.85rem;
+        padding: 0.45rem 1.15rem;
+        transition: all 0.2s ease;
+        text-decoration: none;
+    }
+    .nav-pills-modern .nav-link.active {
+        background: #ffffff;
+        color: #0f172a;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Pagination Styling */
+    .pagination .page-link {
+        color: #475569;
+        border-color: #e2e8f0;
+        font-weight: 600;
+        font-size: 0.8rem;
+        border-radius: 0.375rem;
+        margin: 0 2px;
+        padding: 0.35rem 0.65rem;
+        transition: all 0.15s ease-in-out;
+    }
+    .pagination .page-item.active .page-link {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        border-color: #2563eb;
+        color: #fff;
+        box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+    }
+    .pagination .page-link:hover {
+        background-color: #f1f5f9;
+        color: #1e293b;
+    }
+    .pagination .page-item.disabled .page-link {
+        color: #94a3b8;
+        background-color: #f8fafc;
+        border-color: #e2e8f0;
+    }
+</style>
+
+<!-- Hero Banner Header -->
+<div class="hero-banner text-white p-4 p-md-4 mb-4">
+    <div class="row align-items-center g-3">
+        <div class="col-12 col-md-8">
+            <span class="badge bg-primary bg-opacity-25 text-info border border-info border-opacity-25 px-3 py-1 rounded-pill mb-2 fw-semibold" style="font-size: 0.75rem;">
+                <i class="bi bi-mortarboard-fill me-1"></i> Academic Curriculum &amp; Syllabus
+            </span>
+            <h3 class="fw-bold text-white mb-2">Curriculum Subjects Directory</h3>
+            <p class="text-light text-opacity-75 small mb-0" style="max-width: 600px;">
+                Manage individual syllabus subjects, curriculum outlines, and active status for course mappings.
+            </p>
+        </div>
+        <div class="col-12 col-md-4 text-md-end">
+            <div class="d-inline-flex gap-2 flex-wrap">
+                <button type="button" class="btn btn-primary btn-sm px-3 py-2 rounded-3 fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#addSubjectModal" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9); border: none;">
+                    <i class="bi bi-journal-plus me-1 text-white"></i> Add Subject
+                </button>
+                <a asp-action="Index" class="btn btn-outline-light btn-sm px-3 py-2 rounded-3 fw-semibold shadow-sm">
+                    <i class="bi bi-grid-fill me-1"></i> View Courses
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Premium Stat Metric Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-12 col-sm-4">
+        <div class="stat-metric-card metric-courses p-3 p-md-4 shadow-sm">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-secondary small fw-bold text-uppercase" style="letter-spacing: 0.05em; font-size: 0.72rem;">Total Courses</span>
+                    <div class="fs-2 fw-bold text-dark mt-1">@totalCourses</div>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill mt-1" style="font-size: 0.72rem;">
+                        <i class="bi bi-mortarboard me-1"></i> Curriculum programs
+                    </span>
+                </div>
+                <div class="icon-box icon-courses">
+                    <i class="bi bi-book-half"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-4">
+        <div class="stat-metric-card metric-active p-3 p-md-4 shadow-sm">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-secondary small fw-bold text-uppercase" style="letter-spacing: 0.05em; font-size: 0.72rem;">Active Programs</span>
+                    <div class="fs-2 fw-bold text-success mt-1">@activeCourses</div>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill mt-1" style="font-size: 0.72rem;">
+                        <span class="pulse-dot me-1"></span> Open for Admissions
+                    </span>
+                </div>
+                <div class="icon-box icon-active">
+                    <i class="bi bi-check2-circle"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-4">
+        <div class="stat-metric-card metric-subjects p-3 p-md-4 shadow-sm">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-secondary small fw-bold text-uppercase" style="letter-spacing: 0.05em; font-size: 0.72rem;">Curriculum Subjects</span>
+                    <div class="fs-2 fw-bold text-purple mt-1" style="color: #7c3aed;">@totalSubjects</div>
+                    <span class="badge bg-purple-subtle text-purple border rounded-pill mt-1" style="background-color: #f3e8ff; color: #7c3aed; border-color: #e9d5ff; font-size: 0.72rem;">
+                        <i class="bi bi-journal-bookmark me-1"></i> Mapped in Syllabus
+                    </span>
+                </div>
+                <div class="icon-box icon-subjects">
+                    <i class="bi bi-journal-text"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Switcher Bar & Search -->
+<div class="card border-0 shadow-sm rounded-3 mb-4">
+    <div class="card-body p-3">
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+            <div class="nav-pills-modern" id="viewTabs">
+                <a asp-action="Index" asp-route-pageSize="@Model.PageSize" class="nav-link" id="tabCoursesBtn">
+                    <i class="bi bi-grid-fill me-1 text-primary"></i> Courses Catalog <span class="badge bg-primary-subtle text-primary ms-1">@totalCourses</span>
+                </a>
+                <a asp-action="Subjects" asp-route-pageSize="@Model.PageSize" class="nav-link active" id="tabSubjectsBtn">
+                    <i class="bi bi-journal-bookmark-fill me-1 text-info"></i> Subjects Directory <span class="badge bg-info-subtle text-info ms-1">@totalSubjects</span>
+                </a>
+            </div>
+            <div>
+                <form method="get" asp-action="Subjects" id="catalogSearchForm" class="d-flex align-items-center gap-2 m-0">
+                    <input type="hidden" name="page" value="1" />
+                    <input type="hidden" name="pageSize" value="@Model.PageSize" />
+                    <input type="hidden" name="sortBy" value="@currentSortBy" />
+                    <input type="hidden" name="sortOrder" value="@currentSortOrder" />
+                    
+                    <div class="input-group input-group-sm shadow-sm" style="min-width: 270px; max-width: 360px;">
+                        <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                        <input type="text" name="search" id="catalogSearchInput" class="form-control border-start-0 border-end-0" placeholder="Search subjects by name..." value="@currentSearchValue" />
+                        @if (!string.IsNullOrWhiteSpace(currentSearchValue))
+                        {
+                            <a asp-action="Subjects" asp-route-pageSize="@Model.PageSize" asp-route-sortBy="@currentSortBy" asp-route-sortOrder="@currentSortOrder" class="btn btn-outline-secondary border-start-0 bg-white" title="Clear Search">
+                                <i class="bi bi-x-lg"></i>
+                            </a>
+                        }
+                        <button type="submit" class="btn btn-primary px-3 fw-semibold">
+                            Search
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SUBJECTS TABLE CARD -->
+<div class="card border-0 shadow-sm rounded-3">
+    <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
+        <div>
+            <h6 class="mb-0 fw-bold text-dark">
+                <i class="bi bi-journal-bookmark-fill text-info me-2"></i>Curriculum Subjects Directory
+            </h6>
+            <small class="text-secondary" style="font-size: 0.75rem;">Manage individual subjects and link them across courses</small>
+        </div>
+        <button type="button" class="btn btn-primary btn-sm px-3 rounded-2 fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#addSubjectModal">
+            <i class="bi bi-plus-circle me-1"></i> Add Subject
+        </button>
+    </div>
+
+    @if (!Model.Data.Any())
+    {
+        @if (!string.IsNullOrWhiteSpace(Model.SearchTerm))
+        {
+            <div class="card-body text-center py-5">
+                <div class="rounded-circle bg-warning bg-opacity-10 d-inline-flex p-3 text-warning mb-3 fs-2">
+                    <i class="bi bi-search"></i>
+                </div>
+                <h5 class="fw-bold text-dark mb-1">No Subjects Matching "@Model.SearchTerm"</h5>
+                <p class="text-secondary small mb-3">Try searching with a different keyword or clear the filter to see all subjects.</p>
+                <a asp-action="Subjects" asp-route-pageSize="@Model.PageSize" class="btn btn-outline-info btn-sm px-4 rounded-3 shadow-sm">
+                    <i class="bi bi-x-circle me-1"></i> Clear Subject Filter
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="card-body text-center py-5">
+                <div class="rounded-circle bg-info bg-opacity-10 d-inline-flex p-3 text-info mb-3 fs-2">
+                    <i class="bi bi-journal-x"></i>
+                </div>
+                <h5 class="fw-bold text-dark mb-1">No Subjects Registered</h5>
+                <p class="text-secondary small mb-3">Add subjects like Mathematics, Physics, Chemistry, Accounts to map them into your courses.</p>
+                <button type="button" class="btn btn-info btn-sm text-white px-3 rounded-2" data-bs-toggle="modal" data-bs-target="#addSubjectModal">
+                    <i class="bi bi-plus-circle me-1"></i> Add First Subject
+                </button>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="subjectsTable">
+                <thead class="table-light small text-uppercase text-secondary">
+                    <tr>
+                        <th class="ps-4" style="font-size: 0.72rem;">
+                            <a asp-action="Subjects" 
+                               asp-route-pageSize="@Model.PageSize" 
+                               asp-route-search="@currentSearchValue"
+                               asp-route-sortBy="Name" 
+                               asp-route-sortOrder="@(currentSortBy == "Name" && currentSortOrder == "ASC" ? "DESC" : "ASC")"
+                               class="text-decoration-none text-dark fw-bold d-inline-flex align-items-center gap-1"
+                               title="Click to sort by Subject Name">
+                                <span>Subject Name</span>
+                                @if (currentSortBy == "Name")
+                                {
+                                    <i class="bi @(currentSortOrder == "ASC" ? "bi-sort-alpha-down text-primary fw-bold" : "bi-sort-alpha-up-alt text-primary fw-bold")"></i>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-arrow-down-up text-muted opacity-50" style="font-size: 0.7rem;"></i>
+                                }
+                            </a>
+                        </th>
+                        <th style="font-size: 0.72rem;">Description</th>
+                        <th style="font-size: 0.72rem;">Linked Courses</th>
+                        <th style="font-size: 0.72rem;">Status</th>
+                        <th class="text-end pe-4" style="font-size: 0.72rem;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="small">
+                    @foreach (var s in Model.Data)
+                    {
+                        <tr class="subject-row" data-name="@s.SubjectName.ToLower()" data-desc="@(s.Description?.ToLower() ?? "")">
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="rounded-2 bg-info bg-opacity-10 text-info d-flex align-items-center justify-content-center fw-bold" style="width: 32px; height: 32px; font-size: 0.85rem;">
+                                        <i class="bi bi-journal-check"></i>
+                                    </div>
+                                    <span class="fw-bold text-dark">@s.SubjectName</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="text-secondary" style="font-size: 0.78rem;">
+                                    @(string.IsNullOrWhiteSpace(s.Description) ? "No description provided." : s.Description)
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border px-2 py-1 rounded-pill fw-semibold">
+                                    <i class="bi bi-mortarboard me-1 text-primary"></i>@s.CoursesCount Course(s)
+                                </span>
+                            </td>
+                            <td>
+                                @if (s.IsActive)
+                                {
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-pill">
+                                        <span class="pulse-dot me-1"></span> Active
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1 rounded-pill">Inactive</span>
+                                }
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="d-inline-flex gap-1">
+                                    <button type="button" class="btn btn-sm btn-outline-primary px-2 py-1 rounded-2 edit-subject-btn"
+                                            data-id="@s.SubjectId"
+                                            data-name="@s.SubjectName"
+                                            data-desc="@s.Description"
+                                            data-active="@s.IsActive.ToString().ToLower()"
+                                            title="Edit Subject">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </button>
+                                    <button type="button" 
+                                            class="btn btn-sm btn-outline-danger px-2 py-1 rounded-2 delete-confirm-btn" 
+                                            title="Delete Subject"
+                                            data-url="@Url.Action("DeleteSubject", "Course", new { area = "Admin", id = s.SubjectId })"
+                                            data-title="Delete Subject"
+                                            data-name="@s.SubjectName"
+                                            data-return="Subjects">
+                                        <i class="bi bi-trash3"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Subjects Pagination Bar -->
+        @await Html.PartialAsync("_PaginationBar", Model)
+    }
+</div>
+
+<!-- MODAL: ADD SUBJECT -->
+<div class="modal fade" id="addSubjectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <form asp-action="CreateSubject" method="post" id="addSubjectForm" novalidate>
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="returnAction" value="Subjects" />
+                <div class="p-3 px-4 text-white d-flex align-items-center justify-content-between" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-bottom: 1px solid rgba(255,255,255,0.1);">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-3 d-flex align-items-center justify-content-center text-white" style="width: 40px; height: 40px; background: linear-gradient(135deg, #8b5cf6, #6d28d9); font-size: 1.15rem; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);">
+                            <i class="bi bi-journal-plus"></i>
+                        </div>
+                        <div>
+                            <h6 class="modal-title fw-bold text-white mb-0">Add New Subject</h6>
+                            <span class="text-light text-opacity-75" style="font-size: 0.75rem;">Create a syllabus subject for course mapping</span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body p-4 bg-white">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark text-uppercase" style="letter-spacing: 0.04em; font-size: 0.72rem;">Subject Name <span class="text-danger fw-bold">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-journal-bookmark-fill text-primary"></i></span>
+                            <input name="SubjectName" id="addSubjectName" class="form-control border-start-0" placeholder="e.g. Physics, Chemistry, Mathematics, English" required maxlength="100" autofocus />
+                        </div>
+                        <div class="field-error-msg">
+                            <i class="bi bi-exclamation-circle-fill me-1"></i>Please enter subject name.
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark text-uppercase" style="letter-spacing: 0.04em; font-size: 0.72rem;">Description / Outline</label>
+                        <textarea name="Description" class="form-control" rows="2" placeholder="Brief topics covered or curriculum highlights" maxlength="500"></textarea>
+                    </div>
+
+                    <div class="p-3 bg-light rounded-3 border d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="fw-bold text-dark small">Active Status</div>
+                            <div class="text-muted" style="font-size: 0.72rem;">Available immediately for mapping to courses</div>
+                        </div>
+                        <div class="form-check form-switch m-0">
+                            <input type="hidden" name="IsActive" value="false" />
+                            <input name="IsActive" class="form-check-input fs-5" type="checkbox" role="switch" id="subjectActiveSwitch" value="true" checked />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer p-3 px-4 bg-light border-top d-flex align-items-center justify-content-end gap-2 flex-shrink-0">
+                    <button type="button" class="btn btn-sm btn-outline-secondary px-4 py-2 rounded-3 fw-semibold" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-sm btn-primary px-4 py-2 rounded-3 fw-semibold shadow-sm" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9); border: none;">
+                        <i class="bi bi-check-circle-fill me-1"></i> Save Subject
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: EDIT SUBJECT -->
+<div class="modal fade" id="editSubjectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <form asp-action="EditSubject" method="post" id="editSubjectForm" novalidate>
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="returnAction" value="Subjects" />
+                <input type="hidden" name="SubjectId" id="editSubjectId" />
+                <div class="p-3 px-4 text-white d-flex align-items-center justify-content-between" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-bottom: 1px solid rgba(255,255,255,0.1);">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-3 d-flex align-items-center justify-content-center text-white" style="width: 40px; height: 40px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); font-size: 1.15rem; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);">
+                            <i class="bi bi-pencil-square"></i>
+                        </div>
+                        <div>
+                            <h6 class="modal-title fw-bold text-white mb-0">Edit Curriculum Subject</h6>
+                            <span class="text-light text-opacity-75" style="font-size: 0.75rem;">Modify subject name and active availability</span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body p-4 bg-white">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark text-uppercase" style="letter-spacing: 0.04em; font-size: 0.72rem;">Subject Name <span class="text-danger fw-bold">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-journal-bookmark-fill text-primary"></i></span>
+                            <input name="SubjectName" id="editSubjectName" class="form-control border-start-0" required maxlength="100" />
+                        </div>
+                        <div class="field-error-msg">
+                            <i class="bi bi-exclamation-circle-fill me-1"></i>Please enter subject name.
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark text-uppercase" style="letter-spacing: 0.04em; font-size: 0.72rem;">Description / Outline</label>
+                        <textarea name="Description" id="editSubjectDesc" class="form-control" rows="2" maxlength="500"></textarea>
+                    </div>
+
+                    <div class="p-3 bg-light rounded-3 border d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="fw-bold text-dark small">Active Status</div>
+                            <div class="text-muted" style="font-size: 0.72rem;">Visible in course subject checklists</div>
+                        </div>
+                        <div class="form-check form-switch m-0">
+                            <input type="hidden" name="IsActive" value="false" />
+                            <input name="IsActive" class="form-check-input fs-5" type="checkbox" role="switch" id="editSubjectActiveSwitch" value="true" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer p-3 px-4 bg-light border-top d-flex align-items-center justify-content-end gap-2 flex-shrink-0">
+                    <button type="button" class="btn btn-sm btn-outline-secondary px-4 py-2 rounded-3 fw-semibold" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-sm btn-primary px-4 py-2 rounded-3 fw-semibold shadow-sm" style="background: linear-gradient(135deg, #3b82f6, #6366f1); border: none;">
+                        <i class="bi bi-check-circle-fill me-1"></i> Update Subject
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.edit-subject-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const id = this.dataset.id;
+                    const name = this.dataset.name;
+                    const desc = this.dataset.desc;
+                    const active = this.dataset.active === 'true';
+
+                    document.getElementById('editSubjectId').value = id;
+                    document.getElementById('editSubjectName').value = name;
+                    document.getElementById('editSubjectDesc').value = desc || '';
+                    document.getElementById('editSubjectActiveSwitch').checked = active;
+
+                    const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('editSubjectModal'));
+                    modal.show();
+                });
+            });
+        });
+    </script>
+}

@@ -40,4 +40,24 @@ namespace CMS_DAL.Repositories.Interfaces
         Task<TeacherDashboardStats> GetTeacherStatsAsync(int userId);
         Task<StudentDashboardStats> GetStudentStatsAsync(int userId);
     }
+
+    public interface ICourseRepository
+    {
+        Task<IEnumerable<Course>> GetAllCoursesAsync();
+        Task<(IEnumerable<Course> Courses, int TotalCount)> GetPagedCoursesAsync(string? searchTerm, int pageNumber, int pageSize, string sortColumn = "Id", string sortDirection = "DESC");
+        Task<Course?> GetCourseByIdAsync(int courseId);
+        Task<int> CreateCourseAsync(Course course);
+        Task<int> UpdateCourseAsync(Course course);
+        Task<int> DeleteCourseAsync(int courseId);
+
+        Task<IEnumerable<Subject>> GetAllSubjectsAsync();
+        Task<(IEnumerable<Subject> Subjects, int TotalCount)> GetPagedSubjectsAsync(string? searchTerm, int pageNumber, int pageSize, string sortColumn = "Id", string sortDirection = "DESC");
+        Task<Subject?> GetSubjectByIdAsync(int subjectId);
+        Task<int> CreateSubjectAsync(Subject subject);
+        Task<int> UpdateSubjectAsync(Subject subject);
+        Task<int> DeleteSubjectAsync(int subjectId);
+
+        Task<IEnumerable<Subject>> GetSubjectsByCourseIdAsync(int courseId);
+        Task<bool> AssignSubjectsToCourseAsync(int courseId, IEnumerable<int> subjectIds);
+    }
 }

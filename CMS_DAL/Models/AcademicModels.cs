@@ -20,6 +20,8 @@ namespace CMS_DAL.Models
         public string? Duration { get; set; }
         public bool IsActive { get; set; } = true;
         public DateTime CreatedAt { get; set; }
+        public int SubjectsCount { get; set; }
+        public int BatchesCount { get; set; }
     }
 
     public class Subject
@@ -29,6 +31,7 @@ namespace CMS_DAL.Models
         public string? Description { get; set; }
         public bool IsActive { get; set; } = true;
         public DateTime CreatedAt { get; set; }
+        public int CoursesCount { get; set; }
     }
 
     public class Batch

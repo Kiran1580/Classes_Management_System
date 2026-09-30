@@ -1,0 +1,954 @@
+@model CMS_BAL.ViewModels.PagedResult<CMS_BAL.ViewModels.CourseViewModel>
+@{
+    ViewData["Title"] = "Courses Catalog";
+    string currentSearchValue = Model.SearchTerm ?? "";
+    string currentSortBy = Model.SortColumn ?? "Id";
+    string currentSortOrder = Model.SortDirection ?? "DESC";
+    var availableSubjects = (ViewBag.AvailableSubjects as List<CMS_BAL.ViewModels.SubjectViewModel>)
+        ?? (ViewBag.AllAvailableSubjects as List<CMS_BAL.ViewModels.SubjectViewModel>) 
+        ?? new List<CMS_BAL.ViewModels.SubjectViewModel>();
+    int totalCourses = ViewBag.TotalCourses ?? Model.TotalCount;
+    int activeCourses = ViewBag.ActiveCourses ?? 0;
+    int totalSubjects = ViewBag.TotalSubjects ?? 0;
+}
+
+<style>
+    /* Card & Animation Styles */
+    .stat-metric-card {
+        background: #ffffff;
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        border-radius: 1rem;
+        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    .stat-metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.08) !important;
+    }
+    .stat-metric-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+    }
+    .metric-courses::before { background: linear-gradient(90deg, #3b82f6, #6366f1); }
+    .metric-active::before { background: linear-gradient(90deg, #10b981, #059669); }
+    .metric-subjects::before { background: linear-gradient(90deg, #8b5cf6, #ec4899); }
+
+    .icon-box {
+        width: 52px;
+        height: 52px;
+        border-radius: 0.85rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        color: white;
+        box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.15);
+    }
+    .icon-courses { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+    .icon-active { background: linear-gradient(135deg, #10b981, #047857); }
+    .icon-subjects { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+
+    /* Hero Banner */
+    .hero-banner {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #172554 100%);
+        border-radius: 1.25rem;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.3);
+    }
+    .hero-banner::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    /* Course Card */
+    .course-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 1rem;
+        transition: all 0.25s ease-in-out;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+    .course-card:hover {
+        border-color: #cbd5e1;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08) !important;
+        transform: translateY(-3px);
+    }
+    .subject-chip {
+        font-size: 0.72rem;
+        background-color: #f1f5f9;
+        color: #334155;
+        border-radius: 20px;
+        padding: 0.25rem 0.65rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    .pulse-dot {
+        width: 8px;
+        height: 8px;
+        background: #10b981;
+        border-radius: 50%;
+        display: inline-block;
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+        animation: pulse-green 2s infinite;
+    }
+    @@keyframes pulse-green {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    /* Modern Tabs Switcher */
+    .nav-pills-modern {
+        background: #f1f5f9;
+        padding: 0.35rem;
+        border-radius: 0.75rem;
+        display: inline-flex;
+    }
+    .nav-pills-modern .nav-link {
+        border-radius: 0.5rem;
+        color: #64748b;
+        font-weight: 600;
+        font-size: 0.85rem;
+        padding: 0.45rem 1.15rem;
+        transition: all 0.2s ease;
+        text-decoration: none;
+    }
+    .nav-pills-modern .nav-link.active {
+        background: #ffffff;
+        color: #0f172a;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .duration-quick-pill {
+        cursor: pointer;
+        padding: 0.25rem 0.6rem;
+        font-size: 0.72rem;
+        font-weight: 500;
+        border-radius: 0.4rem;
+        background: #f1f5f9;
+        color: #475569;
+        border: 1px solid #e2e8f0;
+        transition: all 0.15s ease;
+    }
+    .duration-quick-pill:hover, .duration-quick-pill.active {
+        background: #3b82f6;
+        color: #ffffff;
+        border-color: #3b82f6;
+    }
+    .sub-tile-card {
+        background: #ffffff;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 0.75rem;
+        padding: 0.6rem 0.85rem;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        user-select: none;
+    }
+    .sub-tile-card:hover {
+        border-color: #93c5fd;
+        background: #f8fafc;
+    }
+    .sub-tile-card.active-selected {
+        background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+    .sub-tile-card input[type="checkbox"] {
+        cursor: pointer;
+        width: 1.15rem;
+        height: 1.15rem;
+    }
+
+    /* Modal Scroll Dialog & Pinned Footer Layout */
+    .modal-scroll-dialog {
+        max-height: 88vh;
+        display: flex;
+        flex-direction: column;
+    }
+    .modal-scroll-body {
+        overflow-y: auto;
+        flex: 1 1 auto;
+    }
+    .modal-scroll-body::-webkit-scrollbar,
+    .modal-subject-box::-webkit-scrollbar {
+        width: 6px;
+    }
+    .modal-scroll-body::-webkit-scrollbar-track,
+    .modal-subject-box::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 4px;
+    }
+    .modal-scroll-body::-webkit-scrollbar-thumb,
+    .modal-subject-box::-webkit-scrollbar-thumb {
+        background: #94a3b8;
+        border-radius: 4px;
+    }
+    .modal-scroll-body::-webkit-scrollbar-thumb:hover,
+    .modal-subject-box::-webkit-scrollbar-thumb:hover {
+        background: #64748b;
+    }
+
+    /* Pagination Styling */
+    .pagination .page-link {
+        color: #475569;
+        border-color: #e2e8f0;
+        font-weight: 600;
+        font-size: 0.8rem;
+        border-radius: 0.375rem;
+        margin: 0 2px;
+        padding: 0.35rem 0.65rem;
+        transition: all 0.15s ease-in-out;
+    }
+    .pagination .page-item.active .page-link {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        border-color: #2563eb;
+        color: #fff;
+        box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+    }
+    .pagination .page-link:hover {
+        background-color: #f1f5f9;
+        color: #1e293b;
+    }
+    .pagination .page-item.disabled .page-link {
+        color: #94a3b8;
+        background-color: #f8fafc;
+        border-color: #e2e8f0;
+    }
+</style>
+
+<!-- Hero Banner Header -->
+<div class="hero-banner text-white p-4 p-md-4 mb-4">
+    <div class="row align-items-center g-3">
+        <div class="col-12 col-md-8">
+            <span class="badge bg-primary bg-opacity-25 text-info border border-info border-opacity-25 px-3 py-1 rounded-pill mb-2 fw-semibold" style="font-size: 0.75rem;">
+                <i class="bi bi-mortarboard-fill me-1"></i> Academic Curriculum &amp; Syllabus
+            </span>
+            <h3 class="fw-bold text-white mb-2">Courses &amp; Subjects Management</h3>
+            <p class="text-light text-opacity-75 small mb-0" style="max-width: 600px;">
+                Define standard academic programs, study durations, and link syllabus subjects for streamlined batch scheduling.
+            </p>
+        </div>
+        <div class="col-12 col-md-4 text-md-end">
+            <div class="d-inline-flex gap-2 flex-wrap">
+                <button type="button" class="btn btn-outline-light btn-sm px-3 py-2 rounded-3 fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#addSubjectModal">
+                    <i class="bi bi-journal-plus me-1 text-warning"></i> Add Subject
+                </button>
+                <button type="button" class="btn btn-primary btn-sm px-3 py-2 rounded-3 fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#addCourseModal" style="background: linear-gradient(135deg, #3b82f6, #6366f1); border: none;">
+                    <i class="bi bi-plus-circle me-1"></i> Add Course
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Premium Stat Metric Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-12 col-sm-4">
+        <div class="stat-metric-card metric-courses p-3 p-md-4 shadow-sm">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-secondary small fw-bold text-uppercase" style="letter-spacing: 0.05em; font-size: 0.72rem;">Total Courses</span>
+                    <div class="fs-2 fw-bold text-dark mt-1">@totalCourses</div>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill mt-1" style="font-size: 0.72rem;">
+                        <i class="bi bi-mortarboard me-1"></i> Curriculum programs
+                    </span>
+                </div>
+                <div class="icon-box icon-courses">
+                    <i class="bi bi-book-half"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-4">
+        <div class="stat-metric-card metric-active p-3 p-md-4 shadow-sm">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-secondary small fw-bold text-uppercase" style="letter-spacing: 0.05em; font-size: 0.72rem;">Active Programs</span>
+                    <div class="fs-2 fw-bold text-success mt-1">@activeCourses</div>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill mt-1" style="font-size: 0.72rem;">
+                        <span class="pulse-dot me-1"></span> Open for Admissions
+                    </span>
+                </div>
+                <div class="icon-box icon-active">
+                    <i class="bi bi-check2-circle"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-4">
+        <div class="stat-metric-card metric-subjects p-3 p-md-4 shadow-sm">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-secondary small fw-bold text-uppercase" style="letter-spacing: 0.05em; font-size: 0.72rem;">Curriculum Subjects</span>
+                    <div class="fs-2 fw-bold text-purple mt-1" style="color: #7c3aed;">@totalSubjects</div>
+                    <span class="badge bg-purple-subtle text-purple border rounded-pill mt-1" style="background-color: #f3e8ff; color: #7c3aed; border-color: #e9d5ff; font-size: 0.72rem;">
+                        <i class="bi bi-journal-bookmark me-1"></i> Mapped in Syllabus
+                    </span>
+                </div>
+                <div class="icon-box icon-subjects">
+                    <i class="bi bi-journal-text"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Switcher Bar & Search -->
+<div class="card border-0 shadow-sm rounded-3 mb-4">
+    <div class="card-body p-3">
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+            <div class="nav-pills-modern" id="viewTabs">
+                <a asp-action="Index" asp-route-pageSize="@Model.PageSize" class="nav-link active" id="tabCoursesBtn">
+                    <i class="bi bi-grid-fill me-1 text-primary"></i> Courses Catalog <span class="badge bg-primary-subtle text-primary ms-1">@totalCourses</span>
+                </a>
+                <a asp-action="Subjects" asp-route-pageSize="@Model.PageSize" class="nav-link" id="tabSubjectsBtn">
+                    <i class="bi bi-journal-bookmark-fill me-1 text-info"></i> Subjects Directory <span class="badge bg-info-subtle text-info ms-1">@totalSubjects</span>
+                </a>
+            </div>
+            <div>
+                <form method="get" asp-action="Index" id="catalogSearchForm" class="d-flex align-items-center gap-2 m-0">
+                    <input type="hidden" name="page" value="1" />
+                    <input type="hidden" name="pageSize" value="@Model.PageSize" />
+                    <input type="hidden" name="sortBy" value="@currentSortBy" />
+                    <input type="hidden" name="sortOrder" value="@currentSortOrder" />
+                    
+                    <div class="input-group input-group-sm shadow-sm" style="min-width: 270px; max-width: 360px;">
+                        <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                        <input type="text" name="search" id="catalogSearchInput" class="form-control border-start-0 border-end-0" placeholder="Search courses by name..." value="@currentSearchValue" />
+                        @if (!string.IsNullOrWhiteSpace(currentSearchValue))
+                        {
+                            <a asp-action="Index" asp-route-pageSize="@Model.PageSize" asp-route-sortBy="@currentSortBy" asp-route-sortOrder="@currentSortOrder" class="btn btn-outline-secondary border-start-0 bg-white" title="Clear Search">
+                                <i class="bi bi-x-lg"></i>
+                            </a>
+                        }
+                        <button type="submit" class="btn btn-primary px-3 fw-semibold">
+                            Search
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- COURSES CARDS GRID -->
+<div id="tabCourses">
+    @if (!Model.Data.Any())
+    {
+        @if (!string.IsNullOrWhiteSpace(Model.SearchTerm))
+        {
+            <div class="card border-0 shadow-sm rounded-3 text-center py-5">
+                <div class="rounded-circle bg-warning bg-opacity-10 d-inline-flex p-4 text-warning mb-3 fs-1 mx-auto">
+                    <i class="bi bi-search"></i>
+                </div>
+                <h5 class="fw-bold text-dark mb-1">No Courses Matching "@Model.SearchTerm"</h5>
+                <p class="text-secondary small mb-3">Try searching with a different course title or clear the filter to see all courses.</p>
+                <div>
+                    <a asp-action="Index" asp-route-pageSize="@Model.PageSize" class="btn btn-outline-primary btn-sm px-4 rounded-3 shadow-sm">
+                        <i class="bi bi-x-circle me-1"></i> Clear Course Filter
+                    </a>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card border-0 shadow-sm rounded-3 text-center py-5">
+                <div class="rounded-circle bg-primary bg-opacity-10 d-inline-flex p-4 text-primary mb-3 fs-1 mx-auto">
+                    <i class="bi bi-mortarboard"></i>
+                </div>
+                <h5 class="fw-bold text-dark mb-1">No Courses Created Yet</h5>
+                <p class="text-secondary small mb-3">Get started by creating your first course (e.g. 10th Board, 12th Science, NEET).</p>
+                <div>
+                    <button type="button" class="btn btn-primary btn-sm px-4 rounded-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#addCourseModal">
+                        <i class="bi bi-plus-circle me-1"></i> Add First Course
+                    </button>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <!-- Database Sort Bar for Courses -->
+        <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+            <div class="text-secondary small">
+                <span class="badge bg-light text-secondary border px-2 py-1">
+                    <i class="bi bi-sort-down me-1 text-primary"></i>Sorted by: 
+                    <strong class="text-dark">@(currentSortBy == "Name" ? "Course Name" : currentSortBy == "Duration" ? "Duration" : "Recent / Id")</strong>
+                    (@(currentSortOrder == "ASC" ? "Ascending" : "Descending"))
+                </span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="small text-muted fw-semibold text-nowrap">Sort:</span>
+                <div class="btn-group btn-group-sm shadow-sm" role="group">
+                    <a asp-action="Index" 
+                       asp-route-pageSize="@Model.PageSize" 
+                       asp-route-search="@currentSearchValue" 
+                       asp-route-sortBy="Id" 
+                       asp-route-sortOrder="DESC" 
+                       class="btn @(currentSortBy == "Id" || string.IsNullOrEmpty(currentSortBy) ? "btn-primary" : "btn-outline-secondary bg-white")">
+                        Recent
+                    </a>
+                    <a asp-action="Index" 
+                       asp-route-pageSize="@Model.PageSize" 
+                       asp-route-search="@currentSearchValue" 
+                       asp-route-sortBy="Name" 
+                       asp-route-sortOrder="@(currentSortBy == "Name" && currentSortOrder == "ASC" ? "DESC" : "ASC")" 
+                       class="btn @(currentSortBy == "Name" ? "btn-primary" : "btn-outline-secondary bg-white")">
+                        Name @(currentSortBy == "Name" ? (currentSortOrder == "ASC" ? "↑" : "↓") : "")
+                    </a>
+                    <a asp-action="Index" 
+                       asp-route-pageSize="@Model.PageSize" 
+                       asp-route-search="@currentSearchValue" 
+                       asp-route-sortBy="Duration" 
+                       asp-route-sortOrder="@(currentSortBy == "Duration" && currentSortOrder == "ASC" ? "DESC" : "ASC")" 
+                       class="btn @(currentSortBy == "Duration" ? "btn-primary" : "btn-outline-secondary bg-white")">
+                        Duration @(currentSortBy == "Duration" ? (currentSortOrder == "ASC" ? "↑" : "↓") : "")
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3" id="coursesGrid">
+            @foreach (var c in Model.Data)
+            {
+                <div class="col-12 col-md-6 col-xl-4 course-card-wrapper" data-name="@c.CourseName.ToLower()" data-desc="@(c.Description?.ToLower() ?? "")">
+                    <div class="course-card p-3 p-md-4 shadow-sm">
+                        <!-- Card Header -->
+                        <div class="d-flex align-items-start justify-content-between gap-2 mb-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="rounded-3 bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center fw-bold" style="width: 44px; height: 44px; font-size: 1.25rem;">
+                                    <i class="bi bi-mortarboard"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-0 course-name-heading">@c.CourseName</h6>
+                                    <span class="badge bg-light text-secondary border mt-1" style="font-size: 0.72rem;">
+                                        <i class="bi bi-clock-history me-1"></i>@(string.IsNullOrWhiteSpace(c.Duration) ? "Flexible Duration" : c.Duration)
+                                    </span>
+                                </div>
+                            </div>
+                            <div>
+                                @if (c.IsActive)
+                                {
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-pill" style="font-size: 0.72rem;">
+                                        <span class="pulse-dot me-1"></span> Active
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1 rounded-pill" style="font-size: 0.72rem;">
+                                        Inactive
+                                    </span>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <p class="text-secondary small mb-3 flex-grow-1" style="font-size: 0.82rem; min-height: 38px;">
+                            @(string.IsNullOrWhiteSpace(c.Description) ? "No description provided." : c.Description)
+                        </p>
+
+                        <!-- Batches & Subjects Summary -->
+                        <div class="p-2 px-3 bg-light rounded-3 d-flex align-items-center justify-content-between mb-3 border">
+                            <div class="small text-secondary">
+                                <i class="bi bi-people-fill text-primary me-1"></i>
+                                <strong class="text-dark">@c.BatchesCount</strong> Active Batches
+                            </div>
+                            <div class="small text-secondary">
+                                <i class="bi bi-journal-bookmark-fill text-info me-1"></i>
+                                <strong class="text-dark">@c.AssignedSubjects.Count</strong> Subjects
+                            </div>
+                        </div>
+
+                        <!-- Subject Pills Cloud -->
+                        <div class="mb-3">
+                            <div class="text-uppercase text-secondary fw-bold mb-2" style="font-size: 0.68rem; letter-spacing: 0.05em;">Curriculum Subjects</div>
+                            @if (c.AssignedSubjects.Any())
+                            {
+                                <div class="d-flex flex-wrap gap-1">
+                                    @foreach (var sub in c.AssignedSubjects.Take(4))
+                                    {
+                                        <span class="subject-chip">
+                                            <i class="bi bi-check2 text-success"></i>@sub.SubjectName
+                                        </span>
+                                    }
+                                    @if (c.AssignedSubjects.Count > 4)
+                                    {
+                                        <span class="subject-chip bg-white border text-primary">
+                                            +@(c.AssignedSubjects.Count - 4) more
+                                        </span>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <a href="javascript:void(0)" class="text-decoration-none small text-muted fst-italic edit-course-btn"
+                                   data-id="@c.CourseId"
+                                   data-name="@c.CourseName"
+                                   data-duration="@c.Duration"
+                                   data-desc="@c.Description"
+                                   data-active="@(c.IsActive ? "true" : "false")"
+                                   data-subjects="">
+                                    <i class="bi bi-plus-circle-dotted me-1"></i> Map subjects to this course
+                                </a>
+                            }
+                        </div>
+
+                        <!-- Action Footer -->
+                        <div class="d-flex align-items-center justify-content-between pt-3 border-top mt-auto">
+                            <span class="text-muted" style="font-size: 0.72rem;">
+                                <i class="bi bi-calendar-event me-1"></i>@c.CreatedAt.ToString("MMM yyyy")
+                            </span>
+                            <div class="d-flex gap-1">
+                                <button type="button" 
+                                        class="btn btn-sm btn-outline-primary px-3 rounded-2 fw-semibold edit-course-btn" 
+                                        style="font-size: 0.78rem;"
+                                        data-id="@c.CourseId"
+                                        data-name="@c.CourseName"
+                                        data-duration="@c.Duration"
+                                        data-desc="@c.Description"
+                                        data-active="@(c.IsActive ? "true" : "false")"
+                                        data-subjects="@string.Join(",", c.AssignedSubjects.Select(s => s.SubjectId))">
+                                    <i class="bi bi-pencil-square me-1"></i> Edit
+                                </button>
+                                <button type="button" 
+                                        class="btn btn-sm btn-outline-danger px-2 rounded-2 delete-confirm-btn" 
+                                        title="Delete Course"
+                                        data-url="@Url.Action("Delete", "Course", new { area = "Admin", id = c.CourseId })"
+                                        data-title="Delete Course Program"
+                                        data-name="@c.CourseName">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Courses Pagination Bar -->
+        <div class="card border-0 shadow-sm rounded-3 mt-4 overflow-hidden">
+            @await Html.PartialAsync("_PaginationBar", Model)
+        </div>
+    }
+</div>
+
+<!-- MODAL: ADD COURSE (PREMIUM POPUP) -->
+<div class="modal fade" id="addCourseModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <form asp-action="Create" method="post" id="addCourseForm" novalidate class="modal-content modal-scroll-dialog border-0 shadow-lg rounded-4 overflow-hidden">
+            @Html.AntiForgeryToken()
+            <div class="modal-header p-3 px-4 text-white d-flex align-items-center justify-content-between border-0 flex-shrink-0" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #172554 100%);">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-3 d-flex align-items-center justify-content-center text-white" style="width: 42px; height: 42px; background: linear-gradient(135deg, #3b82f6, #6366f1); font-size: 1.25rem; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);">
+                        <i class="bi bi-mortarboard-fill"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold text-white mb-0">Create New Course</h5>
+                        <span class="text-light text-opacity-75" style="font-size: 0.75rem;">Define course title, study duration &amp; link syllabus subjects</span>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white m-0" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body modal-scroll-body p-4 bg-white">
+                <div class="row g-3 mb-3">
+                    <div class="col-12 col-md-7">
+                        <label class="form-label small fw-bold text-dark text-uppercase mb-1" style="letter-spacing: 0.04em; font-size: 0.72rem;">Course Name <span class="text-danger fw-bold">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-mortarboard text-primary"></i></span>
+                            <input name="CourseName" class="form-control border-start-0" required maxlength="100" placeholder="e.g., 10th Standard (State Board), NEET 2026" />
+                        </div>
+                        <div class="field-error-msg">
+                            <i class="bi bi-exclamation-circle-fill me-1"></i>Please enter course name.
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-5">
+                        <label class="form-label small fw-bold text-dark text-uppercase mb-1" style="letter-spacing: 0.04em; font-size: 0.72rem;">Duration</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-clock-history text-primary"></i></span>
+                            <input name="Duration" id="addCourseDurationInput" class="form-control border-start-0" maxlength="50" placeholder="e.g., 1 Year, 6 Months" />
+                        </div>
+                        <div class="d-flex flex-wrap gap-1 mt-2">
+                            <span class="duration-quick-pill" onclick="setAddDuration('1 Year')">1 Year</span>
+                            <span class="duration-quick-pill" onclick="setAddDuration('2 Years')">2 Years</span>
+                            <span class="duration-quick-pill" onclick="setAddDuration('6 Months')">6 Months</span>
+                            <span class="duration-quick-pill" onclick="setAddDuration('3 Months')">3 Months</span>
+                            <span class="duration-quick-pill" onclick="setAddDuration('Flexible')">Flexible</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-dark text-uppercase mb-1" style="letter-spacing: 0.04em; font-size: 0.72rem;">Course Overview / Objectives</label>
+                    <textarea name="Description" class="form-control" rows="2" maxlength="500" placeholder="Brief summary of curriculum goals, eligibility criteria, or highlights..."></textarea>
+                </div>
+
+                <div class="p-3 bg-light rounded-3 border d-flex align-items-center justify-content-between mb-3">
+                    <div>
+                        <div class="fw-bold text-dark small">Course Active Status</div>
+                        <div class="text-muted" style="font-size: 0.72rem;">When enabled, this course will immediately appear in batch creation workflows</div>
+                    </div>
+                    <div class="form-check form-switch m-0">
+                        <input type="hidden" name="IsActive" value="false" />
+                        <input name="IsActive" class="form-check-input fs-5" type="checkbox" role="switch" id="addCourseActiveSwitch" value="true" checked />
+                    </div>
+                </div>
+
+                <!-- Curriculum Subjects -->
+                <div class="border rounded-3 p-3">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <div>
+                            <span class="fw-bold text-dark text-uppercase small" style="font-size: 0.75rem; letter-spacing: 0.04em;">
+                                <i class="bi bi-journal-check text-primary me-1"></i> Assign Syllabus Subjects
+                            </span>
+                            <span class="text-muted small ms-1" style="font-size: 0.72rem;">(Click subjects to select)</span>
+                        </div>
+                        @if (availableSubjects.Any())
+                        {
+                            <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2 rounded-2" id="addSelectAllSubjectsBtn" style="font-size: 0.72rem;">
+                                <i class="bi bi-check-all me-1"></i>Toggle All
+                            </button>
+                        }
+                    </div>
+
+                    @if (!availableSubjects.Any())
+                    {
+                        <div class="p-3 bg-light rounded-2 text-center text-muted small">
+                            <i class="bi bi-info-circle me-1"></i> No subjects available yet. You can create subjects using the "+ Add Subject" button.
+                        </div>
+                    }
+                    else
+                    {
+                        <div style="max-height: 140px; overflow-y: auto;" class="pe-1 modal-subject-box">
+                            <div class="row g-2">
+                                @foreach (var s in availableSubjects)
+                                {
+                                    <div class="col-12 col-sm-6">
+                                        <label class="sub-tile-card add-sub-tile" data-subid="@s.SubjectId">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="rounded-2 bg-light d-flex align-items-center justify-content-center text-primary" style="width: 28px; height: 28px; font-size: 0.85rem;">
+                                                    <i class="bi bi-journal-bookmark-fill"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-semibold text-dark small" style="font-size: 0.82rem;">@s.SubjectName</div>
+                                                </div>
+                                            </div>
+                                            <input type="checkbox" name="SelectedSubjectIds" value="@s.SubjectId" class="form-check-input add-sub-check" />
+                                        </label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Modal Footer (ALWAYS VISIBLE & PINNED AT BOTTOM) -->
+            <div class="modal-footer p-3 px-4 bg-light border-top d-flex align-items-center justify-content-end gap-2 flex-shrink-0">
+                <button type="button" class="btn btn-sm btn-outline-secondary px-4 py-2 rounded-3 fw-semibold" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i> Cancel
+                </button>
+                <button type="submit" class="btn btn-sm btn-primary px-4 py-2 rounded-3 fw-semibold shadow-sm" style="background: linear-gradient(135deg, #3b82f6, #6366f1); border: none;">
+                    <i class="bi bi-check-circle-fill me-1"></i> Save Course
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL: EDIT COURSE (PREMIUM POPUP) -->
+<div class="modal fade" id="editCourseModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <form asp-action="Edit" method="post" id="editCourseForm" novalidate class="modal-content modal-scroll-dialog border-0 shadow-lg rounded-4 overflow-hidden">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="CourseId" id="editCourseId" />
+            <div class="modal-header p-3 px-4 text-white d-flex align-items-center justify-content-between border-0 flex-shrink-0" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #1e3a8a 100%);">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-3 d-flex align-items-center justify-content-center text-white" style="width: 42px; height: 42px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); font-size: 1.25rem; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);">
+                        <i class="bi bi-pencil-square"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold text-white mb-0">Edit Course Program</h5>
+                        <span class="text-light text-opacity-75" style="font-size: 0.75rem;">Modify course curriculum info and syllabus mapping</span>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white m-0" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body modal-scroll-body p-4 bg-white">
+                <div class="row g-3 mb-3">
+                    <div class="col-12 col-md-7">
+                        <label class="form-label small fw-bold text-dark text-uppercase mb-1" style="letter-spacing: 0.04em; font-size: 0.72rem;">Course Name <span class="text-danger fw-bold">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-mortarboard text-primary"></i></span>
+                            <input name="CourseName" id="editCourseName" class="form-control border-start-0" required maxlength="100" />
+                        </div>
+                        <div class="field-error-msg">
+                            <i class="bi bi-exclamation-circle-fill me-1"></i>Please enter course name.
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-5">
+                        <label class="form-label small fw-bold text-dark text-uppercase mb-1" style="letter-spacing: 0.04em; font-size: 0.72rem;">Duration</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-clock-history text-primary"></i></span>
+                            <input name="Duration" id="editCourseDurationInput" class="form-control border-start-0" maxlength="50" />
+                        </div>
+                        <div class="d-flex flex-wrap gap-1 mt-2">
+                            <span class="duration-quick-pill" onclick="setEditDuration('1 Year')">1 Year</span>
+                            <span class="duration-quick-pill" onclick="setEditDuration('2 Years')">2 Years</span>
+                            <span class="duration-quick-pill" onclick="setEditDuration('6 Months')">6 Months</span>
+                            <span class="duration-quick-pill" onclick="setEditDuration('3 Months')">3 Months</span>
+                            <span class="duration-quick-pill" onclick="setEditDuration('Flexible')">Flexible</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-dark text-uppercase mb-1" style="letter-spacing: 0.04em; font-size: 0.72rem;">Course Overview / Objectives</label>
+                    <textarea name="Description" id="editCourseDesc" class="form-control" rows="2" maxlength="500"></textarea>
+                </div>
+
+                <div class="p-3 bg-light rounded-3 border d-flex align-items-center justify-content-between mb-3">
+                    <div>
+                        <div class="fw-bold text-dark small">Course Active Status</div>
+                        <div class="text-muted" style="font-size: 0.72rem;">When enabled, this course will immediately appear in batch creation workflows</div>
+                    </div>
+                    <div class="form-check form-switch m-0">
+                        <input type="hidden" name="IsActive" value="false" />
+                        <input name="IsActive" class="form-check-input fs-5" type="checkbox" role="switch" id="editCourseActiveSwitch" value="true" />
+                    </div>
+                </div>
+
+                <!-- Curriculum Subjects -->
+                <div class="border rounded-3 p-3">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <div>
+                            <span class="fw-bold text-dark text-uppercase small" style="font-size: 0.75rem; letter-spacing: 0.04em;">
+                                <i class="bi bi-journal-check text-primary me-1"></i> Assign Syllabus Subjects
+                            </span>
+                            <span class="text-muted small ms-1" style="font-size: 0.72rem;">(Click subjects to select)</span>
+                        </div>
+                        @if (availableSubjects.Any())
+                        {
+                            <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2 rounded-2" id="editSelectAllSubjectsBtn" style="font-size: 0.72rem;">
+                                <i class="bi bi-check-all me-1"></i>Toggle All
+                            </button>
+                        }
+                    </div>
+
+                    @if (!availableSubjects.Any())
+                    {
+                        <div class="p-3 bg-light rounded-2 text-center text-muted small">
+                            <i class="bi bi-info-circle me-1"></i> No subjects available yet.
+                        </div>
+                    }
+                    else
+                    {
+                        <div style="max-height: 140px; overflow-y: auto;" class="pe-1 modal-subject-box">
+                            <div class="row g-2">
+                                @foreach (var s in availableSubjects)
+                                {
+                                    <div class="col-12 col-sm-6">
+                                        <label class="sub-tile-card edit-sub-tile" data-subid="@s.SubjectId">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="rounded-2 bg-light d-flex align-items-center justify-content-center text-primary" style="width: 28px; height: 28px; font-size: 0.85rem;">
+                                                    <i class="bi bi-journal-bookmark-fill"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-semibold text-dark small" style="font-size: 0.82rem;">@s.SubjectName</div>
+                                                </div>
+                                            </div>
+                                            <input type="checkbox" name="SelectedSubjectIds" value="@s.SubjectId" class="form-check-input edit-sub-check" data-subid="@s.SubjectId" />
+                                        </label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Modal Footer (ALWAYS VISIBLE & PINNED AT BOTTOM) -->
+            <div class="modal-footer p-3 px-4 bg-light border-top d-flex align-items-center justify-content-end gap-2 flex-shrink-0">
+                <button type="button" class="btn btn-sm btn-outline-secondary px-4 py-2 rounded-3 fw-semibold" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i> Cancel
+                </button>
+                <button type="submit" class="btn btn-sm btn-primary px-4 py-2 rounded-3 fw-semibold shadow-sm" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); border: none;">
+                    <i class="bi bi-check-circle-fill me-1"></i> Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL: ADD SUBJECT (QUICK POPUP FROM COURSE VIEW) -->
+<div class="modal fade" id="addSubjectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <form asp-action="CreateSubject" method="post" id="addSubjectFormCourseView" novalidate>
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="returnAction" value="Index" />
+                <div class="p-3 px-4 text-white d-flex align-items-center justify-content-between" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-bottom: 1px solid rgba(255,255,255,0.1);">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-3 d-flex align-items-center justify-content-center text-white" style="width: 40px; height: 40px; background: linear-gradient(135deg, #8b5cf6, #6d28d9); font-size: 1.15rem; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);">
+                            <i class="bi bi-journal-plus"></i>
+                        </div>
+                        <div>
+                            <h6 class="modal-title fw-bold text-white mb-0">Add New Subject</h6>
+                            <span class="text-light text-opacity-75" style="font-size: 0.75rem;">Create a syllabus subject for course mapping</span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body p-4 bg-white">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark text-uppercase" style="letter-spacing: 0.04em; font-size: 0.72rem;">Subject Name <span class="text-danger fw-bold">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-journal-bookmark-fill text-primary"></i></span>
+                            <input name="SubjectName" class="form-control border-start-0" placeholder="e.g. Physics, Chemistry, Mathematics, English" required maxlength="100" autofocus />
+                        </div>
+                        <div class="field-error-msg">
+                            <i class="bi bi-exclamation-circle-fill me-1"></i>Please enter subject name.
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark text-uppercase" style="letter-spacing: 0.04em; font-size: 0.72rem;">Description / Outline</label>
+                        <textarea name="Description" class="form-control" rows="2" placeholder="Brief topics covered or curriculum highlights" maxlength="500"></textarea>
+                    </div>
+
+                    <div class="p-3 bg-light rounded-3 border d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="fw-bold text-dark small">Active Status</div>
+                            <div class="text-muted" style="font-size: 0.72rem;">Available immediately for mapping to courses</div>
+                        </div>
+                        <div class="form-check form-switch m-0">
+                            <input type="hidden" name="IsActive" value="false" />
+                            <input name="IsActive" class="form-check-input fs-5" type="checkbox" role="switch" id="subjectActiveSwitch" value="true" checked />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer p-3 px-4 bg-light border-top d-flex align-items-center justify-content-end gap-2 flex-shrink-0">
+                    <button type="button" class="btn btn-sm btn-outline-secondary px-4 py-2 rounded-3 fw-semibold" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-sm btn-primary px-4 py-2 rounded-3 fw-semibold shadow-sm" style="background: linear-gradient(135deg, #3b82f6, #6366f1); border: none;">
+                        <i class="bi bi-check-circle-fill me-1"></i> Save Subject
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        window.setAddDuration = function (val) {
+            const input = document.getElementById('addCourseDurationInput');
+            if (input) input.value = val;
+        };
+
+        window.setEditDuration = function (val) {
+            const input = document.getElementById('editCourseDurationInput');
+            if (input) input.value = val;
+        };
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Checkbox change handlers for visual active state
+            document.querySelectorAll('.add-sub-check').forEach(chk => {
+                chk.addEventListener('change', function () {
+                    const tile = this.closest('.sub-tile-card');
+                    if (tile) tile.classList.toggle('active-selected', this.checked);
+                });
+            });
+
+            document.querySelectorAll('.edit-sub-check').forEach(chk => {
+                chk.addEventListener('change', function () {
+                    const tile = this.closest('.sub-tile-card');
+                    if (tile) tile.classList.toggle('active-selected', this.checked);
+                });
+            });
+
+            // Toggle all in Add Course Modal
+            const addSelectAllBtn = document.getElementById('addSelectAllSubjectsBtn');
+            if (addSelectAllBtn) {
+                addSelectAllBtn.addEventListener('click', function () {
+                    const checkboxes = document.querySelectorAll('.add-sub-check');
+                    const allChecked = Array.from(checkboxes).every(c => c.checked);
+                    checkboxes.forEach(c => {
+                        c.checked = !allChecked;
+                        const tile = c.closest('.sub-tile-card');
+                        if (tile) tile.classList.toggle('active-selected', !allChecked);
+                    });
+                });
+            }
+
+            // Toggle all in Edit Course Modal
+            const editSelectAllBtn = document.getElementById('editSelectAllSubjectsBtn');
+            if (editSelectAllBtn) {
+                editSelectAllBtn.addEventListener('click', function () {
+                    const checkboxes = document.querySelectorAll('.edit-sub-check');
+                    const allChecked = Array.from(checkboxes).every(c => c.checked);
+                    checkboxes.forEach(c => {
+                        c.checked = !allChecked;
+                        const tile = c.closest('.sub-tile-card');
+                        if (tile) tile.classList.toggle('active-selected', !allChecked);
+                    });
+                });
+            }
+
+            // Edit Course Modal Trigger
+            document.querySelectorAll('.edit-course-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const id = this.dataset.id;
+                    const name = this.dataset.name;
+                    const duration = this.dataset.duration || '';
+                    const desc = this.dataset.desc || '';
+                    const active = this.dataset.active === 'true';
+                    const subjectsCsv = this.dataset.subjects || '';
+                    const subjectIds = subjectsCsv ? subjectsCsv.split(',').map(s => s.trim()) : [];
+
+                    document.getElementById('editCourseId').value = id;
+                    document.getElementById('editCourseName').value = name;
+                    document.getElementById('editCourseDurationInput').value = duration;
+                    document.getElementById('editCourseDesc').value = desc;
+                    document.getElementById('editCourseActiveSwitch').checked = active;
+
+                    document.querySelectorAll('.edit-sub-check').forEach(chk => {
+                        const subId = chk.dataset.subid;
+                        const isSelected = subjectIds.includes(subId);
+                        chk.checked = isSelected;
+                        const tile = chk.closest('.sub-tile-card');
+                        if (tile) tile.classList.toggle('active-selected', isSelected);
+                    });
+
+                    const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('editCourseModal'));
+                    modal.show();
+                });
+            });
+        });
+    </script>
+}

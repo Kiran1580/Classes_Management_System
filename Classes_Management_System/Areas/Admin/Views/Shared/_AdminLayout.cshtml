@@ -163,6 +163,80 @@
             padding: 1.75rem;
             flex: 1;
         }
+
+        /* Common Reusable Grid Pagination Styling */
+        .grid-pagination-bar {
+            background-color: #ffffff;
+            transition: all 0.2s ease;
+        }
+        .grid-pagination-info {
+            font-size: 0.82rem;
+            color: #64748b;
+        }
+        .grid-pagesize-select {
+            font-size: 0.78rem;
+            font-weight: 500;
+            border-color: #cbd5e1;
+            border-radius: 0.375rem;
+            padding: 0.25rem 1.75rem 0.25rem 0.65rem;
+            color: #334155;
+            background-color: #f8fafc;
+            cursor: pointer;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+        .grid-pagesize-select:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.15);
+            background-color: #ffffff;
+        }
+        .grid-pagination-nav .page-link.grid-pagination-link {
+            color: #475569;
+            border-color: #e2e8f0;
+            font-weight: 600;
+            font-size: 0.8rem;
+            border-radius: 0.375rem;
+            margin: 0 2px;
+            padding: 0.35rem 0.65rem;
+            transition: all 0.15s ease-in-out;
+        }
+        .grid-pagination-nav .page-item.active .page-link.grid-pagination-link {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border-color: #2563eb;
+            color: #fff;
+            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+        }
+        .grid-pagination-nav .page-link.grid-pagination-link:hover {
+            background-color: #f1f5f9;
+            color: #1e293b;
+        }
+        .grid-pagination-nav .page-item.disabled .page-link.grid-pagination-link {
+            color: #94a3b8;
+            background-color: #f8fafc;
+            border-color: #e2e8f0;
+        }
+
+        /* Attractive Form Validation Styles */
+        .input-group.is-invalid-group {
+            border-radius: 0.375rem;
+        }
+        .input-group.is-invalid-group .form-control,
+        .input-group.is-invalid-group .input-group-text {
+            border-color: #ef4444 !important;
+        }
+        .input-group.is-invalid-group .form-control:focus {
+            box-shadow: 0 0 0 0.25rem rgba(239, 68, 68, 0.15) !important;
+        }
+        .field-error-msg {
+            display: none;
+            font-size: 0.78rem;
+            font-weight: 500;
+            color: #ef4444 !important;
+            animation: fadeInError 0.2s ease-in-out;
+        }
+        @@keyframes fadeInError {
+            from { opacity: 0; transform: translateY(-3px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
     @await RenderSectionAsync("Styles", required: false)
 </head>
@@ -195,7 +269,7 @@
             <a href="#" class="sidebar-link" title="Academic Years & Sessions">
                 <i class="bi bi-calendar3"></i> Academic Sessions
             </a>
-            <a href="#" class="sidebar-link" title="Courses & Subjects">
+            <a asp-area="Admin" asp-controller="Course" asp-action="Index" class="sidebar-link" title="Courses & Subjects">
                 <i class="bi bi-book"></i> Courses & Subjects
             </a>
             <a href="#" class="sidebar-link" title="Batches & Teacher Mapping">
@@ -345,10 +419,74 @@
         </footer>
     </div>
 
+    <!-- Toast Notification Container (Top Right, Auto-dismiss in 4 seconds) -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999; margin-top: 10px;">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div id="appToastSuccess" class="toast align-items-center border-0 shadow-lg rounded-3 mb-2 bg-white" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4000" style="border-left: 5px solid #10b981 !important; min-width: 320px;">
+                <div class="d-flex align-items-center p-3">
+                    <div class="rounded-circle bg-success bg-opacity-10 text-success d-flex align-items-center justify-content-center me-3 flex-shrink-0" style="width: 38px; height: 38px; font-size: 1.25rem;">
+                        <i class="bi bi-check-circle-fill"></i>
+                    </div>
+                    <div class="toast-body p-0 flex-grow-1">
+                        <div class="fw-bold text-dark small">Success</div>
+                        <div class="text-secondary small">@TempData["SuccessMessage"]</div>
+                    </div>
+                    <button type="button" class="btn-close ms-2 me-0" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div id="appToastError" class="toast align-items-center border-0 shadow-lg rounded-3 mb-2 bg-white" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4000" style="border-left: 5px solid #ef4444 !important; min-width: 320px;">
+                <div class="d-flex align-items-center p-3">
+                    <div class="rounded-circle bg-danger bg-opacity-10 text-danger d-flex align-items-center justify-content-center me-3 flex-shrink-0" style="width: 38px; height: 38px; font-size: 1.25rem;">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                    </div>
+                    <div class="toast-body p-0 flex-grow-1">
+                        <div class="fw-bold text-dark small">Error</div>
+                        <div class="text-secondary small">@TempData["ErrorMessage"]</div>
+                    </div>
+                    <button type="button" class="btn-close ms-2 me-0" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Global Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-body text-center p-4 pt-5">
+                    <div class="rounded-circle bg-danger bg-opacity-10 text-danger d-inline-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px; font-size: 1.8rem;">
+                        <i class="bi bi-trash3-fill"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2" id="deleteModalTitle">Confirm Delete</h5>
+                    <p class="text-secondary small mb-4 px-2" id="deleteModalMessage">
+                        Are you sure you want to delete this item? This action cannot be undone.
+                    </p>
+                    <div class="d-flex align-items-center justify-content-center gap-2">
+                        <button type="button" class="btn btn-light px-4 py-2 rounded-3 text-secondary fw-semibold border" data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+                        <form id="globalDeleteForm" method="post" class="m-0">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="returnAction" id="globalDeleteReturnAction" value="" />
+                            <button type="submit" class="btn btn-danger px-4 py-2 rounded-3 fw-semibold shadow-sm d-flex align-items-center gap-2">
+                                <i class="bi bi-trash3"></i> Yes, Delete
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // Sidebar controls
             const sidebar = document.getElementById('sidebar');
             const toggleBtn = document.getElementById('sidebarToggleBtn');
             const closeBtn = document.getElementById('sidebarCloseBtn');
@@ -378,7 +516,98 @@
                     }
                 });
             });
+
+            // Auto-trigger Toast Notifications with 4-second delay
+            document.querySelectorAll('.toast-container .toast').forEach(function(toastEl) {
+                const toast = new bootstrap.Toast(toastEl, { delay: 2000, autohide: true });
+                toast.show();
+            });
+
+            // Global Form Custom Validation Handler (prevents browser default popup, shows attractive red validation)
+            document.addEventListener('submit', function (e) {
+                const form = e.target;
+                if (!form || !form.hasAttribute('novalidate')) return;
+
+                let hasError = false;
+                let firstInvalidInput = null;
+
+                const requiredInputs = form.querySelectorAll('input[required], textarea[required], select[required]');
+                requiredInputs.forEach(input => {
+                    const val = input.value ? input.value.trim() : '';
+                    const group = input.closest('.input-group');
+                    const parent = input.closest('.mb-3') || input.parentElement;
+                    const errorEl = parent ? parent.querySelector('.field-error-msg') : null;
+
+                    if (!val) {
+                        hasError = true;
+                        if (!firstInvalidInput) firstInvalidInput = input;
+                        input.classList.add('is-invalid');
+                        if (group) group.classList.add('is-invalid-group');
+                        if (errorEl) errorEl.style.display = 'block';
+                    } else {
+                        input.classList.remove('is-invalid');
+                        if (group) group.classList.remove('is-invalid-group');
+                        if (errorEl) errorEl.style.display = 'none';
+                    }
+                });
+
+                if (hasError) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (firstInvalidInput) firstInvalidInput.focus();
+                }
+            });
+
+            // Clear red error state immediately when user types
+            document.addEventListener('input', function (e) {
+                const input = e.target;
+                const val = input.value ? input.value.trim() : '';
+                if (val.length > 0) {
+                    input.classList.remove('is-invalid');
+                    const group = input.closest('.input-group');
+                    if (group) group.classList.remove('is-invalid-group');
+                    const parent = input.closest('.mb-3') || input.parentElement;
+                    const errorEl = parent ? parent.querySelector('.field-error-msg') : null;
+                    if (errorEl) errorEl.style.display = 'none';
+                }
+            });
+
+            // Reset validation errors when any modal closes
+            document.addEventListener('hidden.bs.modal', function (e) {
+                const modal = e.target;
+                modal.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+                modal.querySelectorAll('.is-invalid-group').forEach(el => el.classList.remove('is-invalid-group'));
+                modal.querySelectorAll('.field-error-msg').forEach(el => el.style.display = 'none');
+            });
+
+            // Global Delete Confirmation Modal Handler
+            document.addEventListener('click', function(e) {
+                const btn = e.target.closest('.delete-confirm-btn');
+                if (!btn) return;
+                e.preventDefault();
+
+                const url = btn.getAttribute('data-url');
+                const name = btn.getAttribute('data-name') || 'this item';
+                const title = btn.getAttribute('data-title') || 'Confirm Delete';
+                const returnAction = btn.getAttribute('data-return') || '';
+
+                document.getElementById('deleteModalTitle').innerText = title;
+                document.getElementById('deleteModalMessage').innerHTML = `Are you sure you want to delete <strong class="text-dark">"${name}"</strong>?<br><span class="text-muted small">This action cannot be undone.</span>`;
+                document.getElementById('globalDeleteForm').setAttribute('action', url);
+                document.getElementById('globalDeleteReturnAction').value = returnAction;
+
+                const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('deleteConfirmModal'));
+                modal.show();
+            });
         });
+
+        // Common Grid Page Size Change Handler
+        function changeGridPageSize(selectElem, sizeParamName, pageParamName) {
+            const url = new URL(window.location.href);
+            url.searchParams.set(sizeParamName, selectElem.value);
+            url.searchParams.set(pageParamName, '1'); // Reset to page 1 on page size change
+            window.location.href = url.toString();
+        }
     </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

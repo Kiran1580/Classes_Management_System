@@ -1,0 +1,373 @@
+@model CMS_BAL.ViewModels.CourseViewModel
+@{
+    ViewData["Title"] = "Edit Course";
+}
+
+<style>
+    .form-hero-card {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #172554 100%);
+        border-radius: 1.25rem;
+        box-shadow: 0 15px 25px -5px rgba(15, 23, 42, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: white;
+        padding: 1.75rem 2rem;
+    }
+    .form-panel {
+        background: #ffffff;
+        border: 1px solid rgba(226, 232, 240, 0.9);
+        border-radius: 1.25rem;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+    }
+    .form-label-custom {
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: #334155;
+        margin-bottom: 0.45rem;
+        display: block;
+    }
+    .input-group-custom {
+        display: flex;
+        align-items: center;
+        background: #ffffff;
+        border: 1.5px solid #cbd5e1;
+        border-radius: 0.75rem;
+        overflow: hidden;
+        transition: all 0.2s ease;
+    }
+    .input-group-custom:focus-within {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3.5px rgba(59, 130, 246, 0.2);
+    }
+    .input-group-custom .input-icon {
+        padding: 0.75rem 0.25rem 0.75rem 1rem;
+        color: #64748b;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        background: transparent;
+    }
+    .input-group-custom input, 
+    .input-group-custom textarea {
+        flex: 1;
+        border: none;
+        outline: none;
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+        color: #0f172a;
+        background: transparent;
+    }
+    .input-group-custom textarea {
+        resize: vertical;
+        min-height: 85px;
+    }
+
+    /* Duration Quick Pills */
+    .duration-pill {
+        cursor: pointer;
+        padding: 0.25rem 0.65rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        border-radius: 0.5rem;
+        background: #f1f5f9;
+        color: #475569;
+        border: 1px solid #e2e8f0;
+        transition: all 0.15s ease;
+        user-select: none;
+    }
+    .duration-pill:hover {
+        background: #e2e8f0;
+        color: #0f172a;
+    }
+
+    /* Subject Select Tile */
+    .subject-tile {
+        background: #ffffff;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 0.85rem;
+        padding: 0.85rem 1rem;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        user-select: none;
+    }
+    .subject-tile:hover {
+        border-color: #93c5fd;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px -2px rgba(59, 130, 246, 0.12);
+    }
+    .subject-tile.active-selected {
+        background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+    .subject-tile .tile-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 0.6rem;
+        background: #f1f5f9;
+        color: #2563eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+    }
+    .subject-tile.active-selected .tile-icon {
+        background: #3b82f6;
+        color: #ffffff;
+    }
+    .subject-tile input[type="checkbox"] {
+        width: 1.15rem;
+        height: 1.15rem;
+        cursor: pointer;
+    }
+
+    /* Status Toggle Box */
+    .status-toggle-box {
+        background: #f8fafc;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 0.75rem;
+        padding: 0.75rem 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+</style>
+
+<div class="row justify-content-center">
+    <div class="col-12 col-xl-9">
+        <!-- Hero Header -->
+        <div class="form-hero-card mb-4 d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
+            <div>
+                <a asp-action="Index" class="text-info text-decoration-none small fw-semibold d-inline-flex align-items-center mb-2">
+                    <i class="bi bi-arrow-left me-1"></i> Back to Courses Catalog
+                </a>
+                <h4 class="fw-bold text-white mb-1">Edit Academic Program</h4>
+                <p class="text-light text-opacity-75 small mb-0">Update curriculum details, study duration, and linked subjects</p>
+            </div>
+            <div class="rounded-circle bg-warning bg-opacity-20 p-3 text-warning fs-2 d-none d-md-flex align-items-center justify-content-center border border-warning border-opacity-25" style="width: 58px; height: 58px;">
+                <i class="bi bi-pencil-square"></i>
+            </div>
+        </div>
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="alert alert-danger py-2 px-3 small rounded-3 mb-3 d-flex align-items-center gap-2 shadow-sm">
+                <i class="bi bi-exclamation-triangle-fill text-danger flex-shrink-0 fs-5"></i>
+                <div>
+                    @Html.ValidationSummary(true, "")
+                </div>
+            </div>
+        }
+
+        <!-- Main Form Panel -->
+        <div class="form-panel p-4 p-md-4 mb-4">
+            <form asp-action="Edit" method="post" id="courseForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="CourseId" />
+
+                <!-- Step 1: Basic Information -->
+                <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                    <span class="badge bg-warning text-dark rounded-circle p-0 d-inline-flex align-items-center justify-content-center" style="width: 22px; height: 22px; font-size: 0.72rem;">1</span>
+                    <h6 class="fw-bold text-dark mb-0">Program Identification</h6>
+                </div>
+
+                <!-- Course Name -->
+                <div class="mb-4">
+                    <label asp-for="CourseName" class="form-label-custom">Course / Program Name <span class="text-danger fw-bold">*</span></label>
+                    <div class="input-group-custom">
+                        <div class="input-icon">
+                            <i class="bi bi-book"></i>
+                        </div>
+                        <input asp-for="CourseName" placeholder="e.g. 10th Standard State Board" required />
+                    </div>
+                    <span asp-validation-for="CourseName" class="text-danger small mt-1 d-block"></span>
+                </div>
+
+                <!-- Duration & Status Row -->
+                <div class="row g-3 mb-4">
+                    <div class="col-12 col-md-6">
+                        <label asp-for="Duration" class="form-label-custom">Duration</label>
+                        <div class="input-group-custom">
+                            <div class="input-icon">
+                                <i class="bi bi-clock-history"></i>
+                            </div>
+                            <input asp-for="Duration" id="durationInput" placeholder="e.g. 1 Year, 6 Months" />
+                        </div>
+                        <span asp-validation-for="Duration" class="text-danger small mt-1 d-block"></span>
+
+                        <!-- Quick Duration Chips -->
+                        <div class="d-flex gap-1 flex-wrap mt-2 align-items-center">
+                            <span class="text-muted" style="font-size: 0.72rem;">Presets:</span>
+                            <span class="duration-pill" data-val="1 Year">1 Year</span>
+                            <span class="duration-pill" data-val="2 Years">2 Years</span>
+                            <span class="duration-pill" data-val="6 Months">6 Months</span>
+                            <span class="duration-pill" data-val="Crash Course (45 Days)">Crash Course</span>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <label class="form-label-custom">Admission Status</label>
+                        <div class="status-toggle-box">
+                            <div>
+                                <div class="fw-bold text-dark small" id="statusLabel">
+                                    @(Model.IsActive ? "Active for Admissions" : "Inactive (Archived)")
+                                </div>
+                                <div class="text-muted" style="font-size: 0.72rem;">Accepting active student enrollments</div>
+                            </div>
+                            <div class="form-check form-switch m-0">
+                                <input asp-for="IsActive" class="form-check-input fs-5" type="checkbox" role="switch" id="courseActiveSwitch" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div class="mb-4">
+                    <label asp-for="Description" class="form-label-custom">Program Syllabus Overview / Description</label>
+                    <div class="input-group-custom">
+                        <div class="input-icon align-self-start pt-3">
+                            <i class="bi bi-text-paragraph"></i>
+                        </div>
+                        <textarea asp-for="Description" placeholder="Brief outline of target students and curriculum milestones"></textarea>
+                    </div>
+                    <span asp-validation-for="Description" class="text-danger small mt-1 d-block"></span>
+                </div>
+
+                <!-- Step 2: Syllabus Subject Mapping -->
+                <div class="d-flex align-items-center justify-content-between mb-3 pt-3 pb-2 border-top border-bottom">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-warning text-dark rounded-circle p-0 d-inline-flex align-items-center justify-content-center" style="width: 22px; height: 22px; font-size: 0.72rem;">2</span>
+                        <h6 class="fw-bold text-dark mb-0">Map Curriculum Subjects</h6>
+                    </div>
+                    @if (Model.AvailableSubjects.Any())
+                    {
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-light text-secondary border px-2 py-1" id="selectedCountBadge" style="font-size: 0.72rem;">
+                                @Model.SelectedSubjectIds.Count of @Model.AvailableSubjects.Count Selected
+                            </span>
+                            <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 rounded-pill fw-semibold" id="selectAllBtn" style="font-size: 0.75rem;">
+                                Toggle All
+                            </button>
+                        </div>
+                    }
+                </div>
+
+                @if (!Model.AvailableSubjects.Any())
+                {
+                    <div class="p-3 bg-light rounded-3 text-secondary small border mb-4 d-flex align-items-center gap-2">
+                        <i class="bi bi-info-circle text-info fs-5 flex-shrink-0"></i>
+                        <div>
+                            No subjects registered in the system yet.
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="row g-2 mb-4">
+                        @foreach (var sub in Model.AvailableSubjects)
+                        {
+                            var isChecked = Model.SelectedSubjectIds.Contains(sub.SubjectId);
+                            <div class="col-12 col-sm-6">
+                                <label class="subject-tile @(isChecked ? "active-selected" : "")" for="subject_@sub.SubjectId">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="tile-icon">
+                                            <i class="bi bi-journal-bookmark-fill"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-dark small">@sub.SubjectName</div>
+                                            <div class="text-muted" style="font-size: 0.7rem;">
+                                                @(string.IsNullOrWhiteSpace(sub.Description) ? "Curriculum subject" : sub.Description)
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <input class="form-check-input subject-checkbox" type="checkbox"
+                                           name="SelectedSubjectIds"
+                                           value="@sub.SubjectId"
+                                           id="subject_@sub.SubjectId"
+                                           @(isChecked ? "checked" : "") />
+                                </label>
+                            </div>
+                        }
+                    </div>
+                }
+
+                <!-- Action Buttons -->
+                <div class="d-flex align-items-center justify-content-end gap-2 pt-3 border-top">
+                    <a asp-action="Index" class="btn btn-light border px-4 py-2 rounded-3 text-secondary fw-semibold">
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary px-4 py-2 rounded-3 fw-semibold shadow-sm" style="background: linear-gradient(135deg, #3b82f6, #6366f1); border: none;">
+                        <i class="bi bi-check-circle-fill me-1"></i> Update Program
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Duration Presets Click
+            document.querySelectorAll('.duration-pill').forEach(pill => {
+                pill.addEventListener('click', function () {
+                    const input = document.getElementById('durationInput');
+                    if (input) {
+                        input.value = this.dataset.val;
+                    }
+                });
+            });
+
+            // Status Label Toggle
+            const activeSwitch = document.getElementById('courseActiveSwitch');
+            const statusLabel = document.getElementById('statusLabel');
+            if (activeSwitch && statusLabel) {
+                activeSwitch.addEventListener('change', function () {
+                    statusLabel.textContent = this.checked ? 'Active for Admissions' : 'Inactive (Archived)';
+                    statusLabel.className = this.checked ? 'fw-bold text-dark small' : 'fw-bold text-secondary small';
+                });
+            }
+
+            // Interactive Subject Tiles Selection
+            function updateSelectedCount() {
+                const checkedCount = document.querySelectorAll('.subject-checkbox:checked').length;
+                const totalCount = document.querySelectorAll('.subject-checkbox').length;
+                const badge = document.getElementById('selectedCountBadge');
+                if (badge) {
+                    badge.textContent = `${checkedCount} of ${totalCount} Selected`;
+                }
+
+                document.querySelectorAll('.subject-tile').forEach(tile => {
+                    const cb = tile.querySelector('.subject-checkbox');
+                    if (cb && cb.checked) {
+                        tile.classList.add('active-selected');
+                    } else {
+                        tile.classList.remove('active-selected');
+                    }
+                });
+            }
+
+            document.querySelectorAll('.subject-checkbox').forEach(cb => {
+                cb.addEventListener('change', updateSelectedCount);
+            });
+
+            const selectAllBtn = document.getElementById('selectAllBtn');
+            if (selectAllBtn) {
+                let allSelected = false;
+                selectAllBtn.addEventListener('click', function () {
+                    allSelected = !allSelected;
+                    document.querySelectorAll('.subject-checkbox').forEach(cb => cb.checked = allSelected);
+                    selectAllBtn.textContent = allSelected ? 'Clear All' : 'Select All';
+                    updateSelectedCount();
+                });
+            }
+
+            updateSelectedCount();
+        });
+    </script>
+}

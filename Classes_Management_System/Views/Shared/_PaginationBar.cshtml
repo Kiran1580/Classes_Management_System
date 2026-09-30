@@ -1,0 +1,132 @@
+@model dynamic
+@{
+    if (Model == null || Model.TotalCount == 0) return;
+
+    int pageNumber = Model.PageNumber;
+    int pageSize = Model.PageSize;
+    int totalCount = Model.TotalCount;
+    int totalPages = Math.Max(1, Model.TotalPages);
+    int startItem = Model.StartItem;
+    int endItem = Model.EndItem;
+    bool hasPrevious = Model.HasPreviousPage;
+    bool hasNext = Model.HasNextPage;
+
+    string search = Context.Request.Query["search"].ToString();
+    string sortBy = Context.Request.Query["sortBy"].ToString();
+    string sortOrder = Context.Request.Query["sortOrder"].ToString();
+
+    string MakeUrl(int p, int? customSize = null)
+    {
+        var qs = new List<string>();
+        qs.Add("page=" + p);
+        qs.Add("pageSize=" + (customSize ?? pageSize));
+        if (!string.IsNullOrWhiteSpace(search)) qs.Add("search=" + System.Net.WebUtility.UrlEncode(search));
+        if (!string.IsNullOrWhiteSpace(sortBy)) qs.Add("sortBy=" + System.Net.WebUtility.UrlEncode(sortBy));
+        if (!string.IsNullOrWhiteSpace(sortOrder)) qs.Add("sortOrder=" + System.Net.WebUtility.UrlEncode(sortOrder));
+        return "?" + string.Join("&", qs);
+    }
+}
+
+<div class="py-3 px-4 d-flex flex-column flex-md-row align-items-center justify-content-between gap-3 border-top bg-white rounded-bottom-3">
+    <!-- Left: Showing items count -->
+    <div class="text-secondary small">
+        Showing <strong class="text-dark">@startItem</strong> to <strong class="text-dark">@endItem</strong> of <strong class="text-dark">@totalCount</strong> records
+        @if (!string.IsNullOrWhiteSpace(search))
+        {
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2 py-0.5 ms-2">
+                Filtered: "@search"
+            </span>
+        }
+    </div>
+
+    <!-- Right: Rows per page & Navigation -->
+    <div class="d-flex align-items-center gap-3 flex-wrap justify-content-center justify-content-md-end">
+        <!-- Rows per page -->
+        <div class="d-flex align-items-center gap-2">
+            <span class="small text-muted fw-semibold text-nowrap">Rows per page:</span>
+            <select class="form-select form-select-sm" style="width: 72px;" onchange="location.href='@MakeUrl(1, 0)'.replace('pageSize=0', 'pageSize=' + this.value)">
+                @foreach (var size in new[] { 6, 10, 20, 100 })
+                {
+                    <option value="@size" selected="@(pageSize == size ? "selected" : null)">@size</option>
+                }
+            </select>
+        </div>
+
+        <!-- Page counter -->
+        <div class="small text-muted fw-medium text-nowrap">
+            Page <strong class="text-dark">@pageNumber</strong> of <strong class="text-dark">@totalPages</strong>
+        </div>
+
+        <!-- Navigation buttons -->
+        <nav aria-label="Pagination">
+            <ul class="pagination pagination-sm mb-0 align-items-center" style="gap: 3px;">
+                <!-- First -->
+                <li class="page-item @(!hasPrevious ? "disabled" : "")">
+                    @if (hasPrevious)
+                    {
+                        <a class="page-link" href="@MakeUrl(1)" title="First"><i class="bi bi-chevron-double-left"></i></a>
+                    }
+                    else
+                    {
+                        <span class="page-link opacity-50"><i class="bi bi-chevron-double-left"></i></span>
+                    }
+                </li>
+
+                <!-- Previous -->
+                <li class="page-item @(!hasPrevious ? "disabled" : "")">
+                    @if (hasPrevious)
+                    {
+                        <a class="page-link" href="@MakeUrl(pageNumber - 1)" title="Previous"><i class="bi bi-chevron-left"></i></a>
+                    }
+                    else
+                    {
+                        <span class="page-link opacity-50"><i class="bi bi-chevron-left"></i></span>
+                    }
+                </li>
+
+                <!-- Numbers -->
+                @{
+                    int start = Math.Max(1, pageNumber - 2);
+                    int end = Math.Min(totalPages, pageNumber + 2);
+                }
+                @for (int p = start; p <= end; p++)
+                {
+                    <li class="page-item @(p == pageNumber ? "active" : "")">
+                        @if (p == pageNumber)
+                        {
+                            <span class="page-link fw-bold">@p</span>
+                        }
+                        else
+                        {
+                            <a class="page-link" href="@MakeUrl(p)">@p</a>
+                        }
+                    </li>
+                }
+
+                <!-- Next -->
+                <li class="page-item @(!hasNext ? "disabled" : "")">
+                    @if (hasNext)
+                    {
+                        <a class="page-link" href="@MakeUrl(pageNumber + 1)" title="Next"><i class="bi bi-chevron-right"></i></a>
+                    }
+                    else
+                    {
+                        <span class="page-link opacity-50"><i class="bi bi-chevron-right"></i></span>
+                    }
+                </li>
+
+                <!-- Last -->
+                <li class="page-item @(!hasNext ? "disabled" : "")">
+                    @if (hasNext)
+                    {
+                        <a class="page-link" href="@MakeUrl(totalPages)" title="Last"><i class="bi bi-chevron-double-right"></i></a>
+                    }
+                    else
+                    {
+                        <span class="page-link opacity-50"><i class="bi bi-chevron-double-right"></i></span>
+                    }
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>

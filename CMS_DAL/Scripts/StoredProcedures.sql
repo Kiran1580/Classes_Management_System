@@ -513,3 +513,378 @@ BEGIN
     SELECT 1 AS Result;
 END
 GO
+
+-- ==========================================================
+-- 6. COURSES & SUBJECTS STORED PROCEDURES
+-- ==========================================================
+
+-- Get All Courses
+CREATE OR ALTER PROCEDURE sp_GetAllCourses
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        c.CourseId,
+        c.CourseName,
+        c.Description,
+        c.Duration,
+        c.IsActive,
+        c.CreatedAt,
+        (SELECT COUNT(1) FROM CourseSubjects cs WHERE cs.CourseId = c.CourseId) AS SubjectsCount,
+        (SELECT COUNT(1) FROM Batches b WHERE b.CourseId = c.CourseId AND b.Status = 'Active') AS BatchesCount
+    FROM Courses c
+    ORDER BY c.CourseName ASC;
+END
+GO
+
+-- Get Course By Id
+CREATE OR ALTER PROCEDURE sp_GetCourseById
+    @CourseId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        c.CourseId,
+        c.CourseName,
+        c.Description,
+        c.Duration,
+        c.IsActive,
+        c.CreatedAt,
+        (SELECT COUNT(1) FROM CourseSubjects cs WHERE cs.CourseId = c.CourseId) AS SubjectsCount,
+        (SELECT COUNT(1) FROM Batches b WHERE b.CourseId = c.CourseId AND b.Status = 'Active') AS BatchesCount
+    FROM Courses c
+    WHERE c.CourseId = @CourseId;
+END
+GO
+
+-- Create Course
+CREATE OR ALTER PROCEDURE sp_CreateCourse
+    @CourseName NVARCHAR(100),
+    @Description NVARCHAR(500) = NULL,
+    @Duration NVARCHAR(50) = NULL,
+    @IsActive BIT = 1
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF EXISTS (SELECT 1 FROM Courses WHERE LOWER(LTRIM(RTRIM(CourseName))) = LOWER(LTRIM(RTRIM(@CourseName))))
+    BEGIN
+        SELECT -1 AS CourseId;
+        RETURN;
+    END
+
+    INSERT INTO Courses (CourseName, Description, Duration, IsActive, CreatedAt)
+    VALUES (LTRIM(RTRIM(@CourseName)), @Description, @Duration, @IsActive, GETDATE());
+
+    SELECT SCOPE_IDENTITY() AS CourseId;
+END
+GO
+
+-- Update Course
+CREATE OR ALTER PROCEDURE sp_UpdateCourse
+    @CourseId INT,
+    @CourseName NVARCHAR(100),
+    @Description NVARCHAR(500) = NULL,
+    @Duration NVARCHAR(50) = NULL,
+    @IsActive BIT = 1
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF EXISTS (SELECT 1 FROM Courses WHERE LOWER(LTRIM(RTRIM(CourseName))) = LOWER(LTRIM(RTRIM(@CourseName))) AND CourseId <> @CourseId)
+    BEGIN
+        SELECT -1 AS Result;
+        RETURN;
+    END
+
+    UPDATE Courses
+    SET CourseName = LTRIM(RTRIM(@CourseName)),
+        Description = @Description,
+        Duration = @Duration,
+        IsActive = @IsActive
+    WHERE CourseId = @CourseId;
+
+    SELECT 1 AS Result;
+END
+GO
+
+-- Delete Course
+CREATE OR ALTER PROCEDURE sp_DeleteCourse
+    @CourseId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF EXISTS (SELECT 1 FROM Batches WHERE CourseId = @CourseId)
+    BEGIN
+        UPDATE Courses SET IsActive = 0 WHERE CourseId = @CourseId;
+        SELECT 2 AS Result;
+        RETURN;
+    END
+
+    DELETE FROM CourseSubjects WHERE CourseId = @CourseId;
+    DELETE FROM Courses WHERE CourseId = @CourseId;
+
+    SELECT 1 AS Result;
+END
+GO
+
+-- Get All Subjects
+CREATE OR ALTER PROCEDURE sp_GetAllSubjects
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        s.SubjectId,
+        s.SubjectName,
+        s.Description,
+        s.IsActive,
+        s.CreatedAt,
+        (SELECT COUNT(1) FROM CourseSubjects cs WHERE cs.SubjectId = s.SubjectId) AS CoursesCount
+    FROM Subjects s
+    ORDER BY s.SubjectName ASC;
+END
+GO
+
+-- Get Subject By Id
+CREATE OR ALTER PROCEDURE sp_GetSubjectById
+    @SubjectId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        s.SubjectId,
+        s.SubjectName,
+        s.Description,
+        s.IsActive,
+        s.CreatedAt,
+        (SELECT COUNT(1) FROM CourseSubjects cs WHERE cs.SubjectId = s.SubjectId) AS CoursesCount
+    FROM Subjects s
+    WHERE s.SubjectId = @SubjectId;
+END
+GO
+
+-- Create Subject
+CREATE OR ALTER PROCEDURE sp_CreateSubject
+    @SubjectName NVARCHAR(100),
+    @Description NVARCHAR(500) = NULL,
+    @IsActive BIT = 1
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF EXISTS (SELECT 1 FROM Subjects WHERE LOWER(LTRIM(RTRIM(SubjectName))) = LOWER(LTRIM(RTRIM(@SubjectName))))
+    BEGIN
+        SELECT -1 AS SubjectId;
+        RETURN;
+    END
+
+    INSERT INTO Subjects (SubjectName, Description, IsActive, CreatedAt)
+    VALUES (LTRIM(RTRIM(@SubjectName)), @Description, @IsActive, GETDATE());
+
+    SELECT SCOPE_IDENTITY() AS SubjectId;
+END
+GO
+
+-- Update Subject
+CREATE OR ALTER PROCEDURE sp_UpdateSubject
+    @SubjectId INT,
+    @SubjectName NVARCHAR(100),
+    @Description NVARCHAR(500) = NULL,
+    @IsActive BIT = 1
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF EXISTS (SELECT 1 FROM Subjects WHERE LOWER(LTRIM(RTRIM(SubjectName))) = LOWER(LTRIM(RTRIM(@SubjectName))) AND SubjectId <> @SubjectId)
+    BEGIN
+        SELECT -1 AS Result;
+        RETURN;
+    END
+
+    UPDATE Subjects
+    SET SubjectName = LTRIM(RTRIM(@SubjectName)),
+        Description = @Description,
+        IsActive = @IsActive
+    WHERE SubjectId = @SubjectId;
+
+    SELECT 1 AS Result;
+END
+GO
+
+-- Delete Subject
+CREATE OR ALTER PROCEDURE sp_DeleteSubject
+    @SubjectId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF EXISTS (SELECT 1 FROM BatchSubjects WHERE SubjectId = @SubjectId)
+    BEGIN
+        UPDATE Subjects SET IsActive = 0 WHERE SubjectId = @SubjectId;
+        SELECT 2 AS Result;
+        RETURN;
+    END
+
+    DELETE FROM CourseSubjects WHERE SubjectId = @SubjectId;
+    DELETE FROM Subjects WHERE SubjectId = @SubjectId;
+
+    SELECT 1 AS Result;
+END
+GO
+
+-- Get Subjects By Course Id
+CREATE OR ALTER PROCEDURE sp_GetSubjectsByCourseId
+    @CourseId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        s.SubjectId,
+        s.SubjectName,
+        s.Description,
+        s.IsActive,
+        s.CreatedAt
+    FROM Subjects s
+    INNER JOIN CourseSubjects cs ON s.SubjectId = cs.SubjectId
+    WHERE cs.CourseId = @CourseId
+    ORDER BY s.SubjectName ASC;
+END
+GO
+
+-- Assign Subjects To Course
+CREATE OR ALTER PROCEDURE sp_AssignSubjectsToCourse
+    @CourseId INT,
+    @SubjectIds NVARCHAR(MAX) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DELETE FROM CourseSubjects WHERE CourseId = @CourseId;
+
+    IF @SubjectIds IS NOT NULL AND LEN(LTRIM(RTRIM(@SubjectIds))) > 0
+    BEGIN
+        INSERT INTO CourseSubjects (CourseId, SubjectId)
+        SELECT @CourseId, CAST(value AS INT)
+        FROM STRING_SPLIT(@SubjectIds, ',')
+        WHERE ISNUMERIC(value) = 1;
+    END
+
+    SELECT 1 AS Result;
+END
+GO
+
+-- ==========================================================
+-- Get Paged Courses with Search, Sorting & Total Count
+-- ==========================================================
+CREATE OR ALTER PROCEDURE sp_GetPagedCourses
+    @SearchTerm NVARCHAR(100) = NULL,
+    @PageNumber INT = 1,
+    @PageSize INT = 6,
+    @SortColumn NVARCHAR(50) = 'Id',
+    @SortDirection NVARCHAR(10) = 'DESC',
+    @TotalCount INT OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SET @SearchTerm = LTRIM(RTRIM(@SearchTerm));
+    IF @SearchTerm = '' SET @SearchTerm = NULL;
+
+    IF @SortColumn IS NULL OR @SortColumn = '' SET @SortColumn = 'Id';
+    IF @SortDirection IS NULL OR @SortDirection = '' SET @SortDirection = 'DESC';
+    SET @SortDirection = UPPER(@SortDirection);
+    IF @SortDirection NOT IN ('ASC', 'DESC') SET @SortDirection = 'DESC';
+
+    SELECT @TotalCount = COUNT(1)
+    FROM Courses c
+    WHERE (@SearchTerm IS NULL 
+           OR c.CourseName LIKE '%' + @SearchTerm + '%' 
+           OR c.Description LIKE '%' + @SearchTerm + '%'
+           OR c.Duration LIKE '%' + @SearchTerm + '%');
+
+    SELECT 
+        c.CourseId,
+        c.CourseName,
+        c.Description,
+        c.Duration,
+        c.IsActive,
+        c.CreatedAt,
+        (SELECT COUNT(1) FROM CourseSubjects cs WHERE cs.CourseId = c.CourseId) AS SubjectsCount,
+        (SELECT COUNT(1) FROM Batches b WHERE b.CourseId = c.CourseId AND b.Status = 'Active') AS BatchesCount
+    FROM Courses c
+    WHERE (@SearchTerm IS NULL 
+           OR c.CourseName LIKE '%' + @SearchTerm + '%' 
+           OR c.Description LIKE '%' + @SearchTerm + '%'
+           OR c.Duration LIKE '%' + @SearchTerm + '%')
+    ORDER BY 
+        CASE WHEN @SortColumn = 'Name' AND @SortDirection = 'ASC' THEN c.CourseName END ASC,
+        CASE WHEN @SortColumn = 'Name' AND @SortDirection = 'DESC' THEN c.CourseName END DESC,
+        CASE WHEN @SortColumn = 'Duration' AND @SortDirection = 'ASC' THEN c.Duration END ASC,
+        CASE WHEN @SortColumn = 'Duration' AND @SortDirection = 'DESC' THEN c.Duration END DESC,
+        CASE WHEN @SortColumn = 'CreatedAt' AND @SortDirection = 'ASC' THEN c.CreatedAt END ASC,
+        CASE WHEN @SortColumn = 'CreatedAt' AND @SortDirection = 'DESC' THEN c.CreatedAt END DESC,
+        CASE WHEN @SortColumn = 'Id' AND @SortDirection = 'ASC' THEN c.CourseId END ASC,
+        CASE WHEN @SortColumn = 'Id' AND @SortDirection = 'DESC' THEN c.CourseId END DESC,
+        c.CourseId DESC
+    OFFSET (@PageNumber - 1) * @PageSize ROWS
+    FETCH NEXT @PageSize ROWS ONLY;
+END
+GO
+
+-- ==========================================================
+-- Get Paged Subjects with Search, Sorting & Total Count
+-- ==========================================================
+CREATE OR ALTER PROCEDURE sp_GetPagedSubjects
+    @SearchTerm NVARCHAR(100) = NULL,
+    @PageNumber INT = 1,
+    @PageSize INT = 6,
+    @SortColumn NVARCHAR(50) = 'Id',
+    @SortDirection NVARCHAR(10) = 'DESC',
+    @TotalCount INT OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SET @SearchTerm = LTRIM(RTRIM(@SearchTerm));
+    IF @SearchTerm = '' SET @SearchTerm = NULL;
+
+    IF @SortColumn IS NULL OR @SortColumn = '' SET @SortColumn = 'Id';
+    IF @SortDirection IS NULL OR @SortDirection = '' SET @SortDirection = 'DESC';
+    SET @SortDirection = UPPER(@SortDirection);
+    IF @SortDirection NOT IN ('ASC', 'DESC') SET @SortDirection = 'DESC';
+
+    SELECT @TotalCount = COUNT(1)
+    FROM Subjects s
+    WHERE (@SearchTerm IS NULL 
+           OR s.SubjectName LIKE '%' + @SearchTerm + '%' 
+           OR s.Description LIKE '%' + @SearchTerm + '%');
+
+    SELECT 
+        s.SubjectId,
+        s.SubjectName,
+        s.Description,
+        s.IsActive,
+        s.CreatedAt,
+        (SELECT COUNT(1) FROM CourseSubjects cs WHERE cs.SubjectId = s.SubjectId) AS CoursesCount
+    FROM Subjects s
+    WHERE (@SearchTerm IS NULL 
+           OR s.SubjectName LIKE '%' + @SearchTerm + '%' 
+           OR s.Description LIKE '%' + @SearchTerm + '%')
+    ORDER BY 
+        CASE WHEN @SortColumn = 'Name' AND @SortDirection = 'ASC' THEN s.SubjectName END ASC,
+        CASE WHEN @SortColumn = 'Name' AND @SortDirection = 'DESC' THEN s.SubjectName END DESC,
+        CASE WHEN @SortColumn = 'CreatedAt' AND @SortDirection = 'ASC' THEN s.CreatedAt END ASC,
+        CASE WHEN @SortColumn = 'CreatedAt' AND @SortDirection = 'DESC' THEN s.CreatedAt END DESC,
+        CASE WHEN @SortColumn = 'Id' AND @SortDirection = 'ASC' THEN s.SubjectId END ASC,
+        CASE WHEN @SortColumn = 'Id' AND @SortDirection = 'DESC' THEN s.SubjectId END DESC,
+        s.SubjectId DESC
+    OFFSET (@PageNumber - 1) * @PageSize ROWS
+    FETCH NEXT @PageSize ROWS ONLY;
+END
+GO
