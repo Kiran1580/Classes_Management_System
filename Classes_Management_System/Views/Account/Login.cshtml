@@ -153,6 +153,31 @@
             box-shadow: 0 15px 20px -3px rgba(59, 130, 246, 0.6);
             color: #ffffff;
         }
+
+        /* Attractive Red Validation */
+        .custom-input-group.has-error,
+        .input-validation-error {
+            border-color: #ef4444 !important;
+        }
+        .custom-input-group.has-error:focus-within,
+        .input-validation-error:focus {
+            box-shadow: 0 0 0 3.5px rgba(239, 68, 68, 0.3) !important;
+        }
+        .field-validation-error {
+            display: block;
+            font-size: 0.78rem;
+            font-weight: 500;
+            color: #f87171 !important;
+            margin-top: 0.35rem;
+            animation: fadeInError 0.2s ease-in-out;
+        }
+        .field-validation-valid {
+            display: none !important;
+        }
+        @@keyframes fadeInError {
+            from { opacity: 0; transform: translateY(-3px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
@@ -186,25 +211,25 @@
             </div>
         }
 
-        <form asp-controller="Account" asp-action="Login" method="post">
+        <form asp-controller="Account" asp-action="Login" method="post" id="loginForm">
             @Html.AntiForgeryToken()
             <input type="hidden" asp-for="ReturnUrl" />
 
             <!-- Email Field -->
             <div class="mb-3">
-                <label class="field-label">Email Address</label>
+                <label class="field-label">Email Address <span class="text-danger fw-bold">*</span></label>
                 <div class="custom-input-group">
                     <div class="input-icon">
                         <i class="bi bi-envelope"></i>
                     </div>
                     <input asp-for="Email" id="emailInput" class="custom-control" placeholder="name@institute.com" autofocus />
                 </div>
-                <span asp-validation-for="Email" class="text-danger small mt-1 d-block"></span>
+                <span asp-validation-for="Email" class="field-validation-error"></span>
             </div>
 
             <!-- Password Field -->
             <div class="mb-3">
-                <label class="field-label">Password</label>
+                <label class="field-label">Password <span class="text-danger fw-bold">*</span></label>
                 <div class="custom-input-group">
                     <div class="input-icon">
                         <i class="bi bi-lock"></i>
@@ -214,7 +239,7 @@
                         <i class="bi bi-eye" id="togglePasswordIcon"></i>
                     </button>
                 </div>
-                <span asp-validation-for="Password" class="text-danger small mt-1 d-block"></span>
+                <span asp-validation-for="Password" class="field-validation-error"></span>
             </div>
 
             <!-- Remember Me -->
@@ -265,6 +290,38 @@
                     toggleIcon.classList.toggle('bi-eye-slash', isPassword);
                 });
             }
+        });
+    </script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        $(function () {
+            $('form').on('keyup change blur', 'input', function () {
+                var $input = $(this);
+                var $group = $input.closest('.custom-input-group');
+                setTimeout(function () {
+                    if ($input.hasClass('input-validation-error')) {
+                        $group.addClass('has-error');
+                    } else {
+                        $group.removeClass('has-error');
+                    }
+                }, 50);
+            });
+            $('form').on('submit', function () {
+                var $form = $(this);
+                setTimeout(function () {
+                    $form.find('input').each(function () {
+                        var $input = $(this);
+                        var $group = $input.closest('.custom-input-group');
+                        if ($input.hasClass('input-validation-error')) {
+                            $group.addClass('has-error');
+                        } else {
+                            $group.removeClass('has-error');
+                        }
+                    });
+                }, 50);
+            });
         });
     </script>
 </body>

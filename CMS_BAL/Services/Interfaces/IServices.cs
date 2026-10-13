@@ -48,4 +48,15 @@ namespace CMS_BAL.Services.Interfaces
         Task<IEnumerable<SubjectViewModel>> GetSubjectsByCourseIdAsync(int courseId);
         Task<bool> AssignSubjectsToCourseAsync(int courseId, IEnumerable<int> subjectIds);
     }
+
+    public interface IBatchService
+    {
+        Task<PagedResult<BatchViewModel>> GetBatchesAsync(string? search = null, int page = 1, int pageSize = 6, string sortBy = "BatchId", string sortOrder = "DESC", int? courseFilter = null, string? statusFilter = null);
+        Task<IEnumerable<BatchViewModel>> GetAllBatchesAsync();
+        Task<BatchViewModel?> GetBatchByIdAsync(int batchId);
+        Task<(bool Success, string Message, int BatchId)> CreateBatchAsync(BatchViewModel model);
+        Task<(bool Success, string Message)> UpdateBatchAsync(BatchViewModel model);
+        Task<(bool Success, string Message)> DeleteBatchAsync(int batchId);
+        Task<BatchStatsViewModel> GetBatchStatsAsync();
+    }
 }

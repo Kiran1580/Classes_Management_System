@@ -50,6 +50,7 @@ namespace CMS_DAL.Models
         public string? RoomNo { get; set; }
         public string Status { get; set; } = "Active";
         public DateTime CreatedAt { get; set; }
+        public int EnrolledCount { get; set; }
     }
 
     public class Teacher

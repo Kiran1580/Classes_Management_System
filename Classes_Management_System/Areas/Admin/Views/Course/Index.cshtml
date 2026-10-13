@@ -579,7 +579,7 @@
                             <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-mortarboard text-primary"></i></span>
                             <input name="CourseName" class="form-control border-start-0" required maxlength="100" placeholder="e.g., 10th Standard (State Board), NEET 2026" />
                         </div>
-                        <div class="field-error-msg">
+                        <div class="field-error-msg" style="display:none;">
                             <i class="bi bi-exclamation-circle-fill me-1"></i>Please enter course name.
                         </div>
                     </div>
@@ -702,9 +702,9 @@
                         <label class="form-label small fw-bold text-dark text-uppercase mb-1" style="letter-spacing: 0.04em; font-size: 0.72rem;">Course Name <span class="text-danger fw-bold">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-mortarboard text-primary"></i></span>
-                            <input name="CourseName" id="editCourseName" class="form-control border-start-0" required maxlength="100" />
+                            <input name="CourseName" id="editCourseName" class="form-control border-start-0" required maxlength="100" placeholder="e.g., 10th Standard (State Board), NEET 2026" />
                         </div>
-                        <div class="field-error-msg">
+                        <div class="field-error-msg" style="display:none;">
                             <i class="bi bi-exclamation-circle-fill me-1"></i>Please enter course name.
                         </div>
                     </div>
@@ -712,7 +712,7 @@
                         <label class="form-label small fw-bold text-dark text-uppercase mb-1" style="letter-spacing: 0.04em; font-size: 0.72rem;">Duration</label>
                         <div class="input-group">
                             <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-clock-history text-primary"></i></span>
-                            <input name="Duration" id="editCourseDurationInput" class="form-control border-start-0" maxlength="50" />
+                            <input name="Duration" id="editCourseDurationInput" class="form-control border-start-0" maxlength="50" placeholder="e.g., 1 Year, 6 Months" />
                         </div>
                         <div class="d-flex flex-wrap gap-1 mt-2">
                             <span class="duration-quick-pill" onclick="setEditDuration('1 Year')">1 Year</span>
@@ -726,7 +726,7 @@
 
                 <div class="mb-3">
                     <label class="form-label small fw-bold text-dark text-uppercase mb-1" style="letter-spacing: 0.04em; font-size: 0.72rem;">Course Overview / Objectives</label>
-                    <textarea name="Description" id="editCourseDesc" class="form-control" rows="2" maxlength="500"></textarea>
+                    <textarea name="Description" id="editCourseDesc" class="form-control" rows="2" maxlength="500" placeholder="Brief summary of curriculum goals, eligibility criteria, or highlights..."></textarea>
                 </div>
 
                 <div class="p-3 bg-light rounded-3 border d-flex align-items-center justify-content-between mb-3">
@@ -829,7 +829,7 @@
                             <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-journal-bookmark-fill text-primary"></i></span>
                             <input name="SubjectName" class="form-control border-start-0" placeholder="e.g. Physics, Chemistry, Mathematics, English" required maxlength="100" autofocus />
                         </div>
-                        <div class="field-error-msg">
+                        <div class="field-error-msg" style="display:none;">
                             <i class="bi bi-exclamation-circle-fill me-1"></i>Please enter subject name.
                         </div>
                     </div>

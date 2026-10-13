@@ -417,7 +417,7 @@
                             <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-journal-bookmark-fill text-primary"></i></span>
                             <input name="SubjectName" id="addSubjectName" class="form-control border-start-0" placeholder="e.g. Physics, Chemistry, Mathematics, English" required maxlength="100" autofocus />
                         </div>
-                        <div class="field-error-msg">
+                        <div class="field-error-msg" style="display:none;">
                             <i class="bi bi-exclamation-circle-fill me-1"></i>Please enter subject name.
                         </div>
                     </div>
@@ -478,16 +478,16 @@
                         <label class="form-label small fw-bold text-dark text-uppercase" style="letter-spacing: 0.04em; font-size: 0.72rem;">Subject Name <span class="text-danger fw-bold">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-journal-bookmark-fill text-primary"></i></span>
-                            <input name="SubjectName" id="editSubjectName" class="form-control border-start-0" required maxlength="100" />
+                            <input name="SubjectName" id="editSubjectName" class="form-control border-start-0" placeholder="e.g. Physics, Chemistry, Mathematics, English" required maxlength="100" />
                         </div>
-                        <div class="field-error-msg">
+                        <div class="field-error-msg" style="display:none;">
                             <i class="bi bi-exclamation-circle-fill me-1"></i>Please enter subject name.
                         </div>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label small fw-bold text-dark text-uppercase" style="letter-spacing: 0.04em; font-size: 0.72rem;">Description / Outline</label>
-                        <textarea name="Description" id="editSubjectDesc" class="form-control" rows="2" maxlength="500"></textarea>
+                        <textarea name="Description" id="editSubjectDesc" class="form-control" rows="2" placeholder="Brief topics covered or curriculum highlights" maxlength="500"></textarea>
                     </div>
 
                     <div class="p-3 bg-light rounded-3 border d-flex align-items-center justify-content-between">

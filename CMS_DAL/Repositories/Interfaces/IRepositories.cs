@@ -60,4 +60,15 @@ namespace CMS_DAL.Repositories.Interfaces
         Task<IEnumerable<Subject>> GetSubjectsByCourseIdAsync(int courseId);
         Task<bool> AssignSubjectsToCourseAsync(int courseId, IEnumerable<int> subjectIds);
     }
+
+    public interface IBatchRepository
+    {
+        Task<IEnumerable<Batch>> GetAllBatchesAsync();
+        Task<(IEnumerable<Batch> Batches, int TotalCount)> GetPagedBatchesAsync(string? searchTerm, int pageNumber, int pageSize, string sortColumn = "BatchId", string sortDirection = "DESC", int? courseFilter = null, string? statusFilter = null);
+        Task<Batch?> GetBatchByIdAsync(int batchId);
+        Task<int> CreateBatchAsync(Batch batch);
+        Task<int> UpdateBatchAsync(Batch batch);
+        Task<int> DeleteBatchAsync(int batchId);
+        Task<(int TotalBatches, int ActiveBatches, int InactiveBatches, int TotalEnrolled, int CoursesWithBatches)> GetBatchStatsAsync();
+    }
 }

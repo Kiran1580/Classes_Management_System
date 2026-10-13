@@ -146,6 +146,31 @@
             font-size: 0.8rem;
             color: #7dd3fc;
         }
+
+        /* Attractive Red Validation */
+        .custom-input-group.has-error,
+        .input-validation-error {
+            border-color: #ef4444 !important;
+        }
+        .custom-input-group.has-error:focus-within,
+        .input-validation-error:focus {
+            box-shadow: 0 0 0 3.5px rgba(239, 68, 68, 0.3) !important;
+        }
+        .field-validation-error {
+            display: block;
+            font-size: 0.78rem;
+            font-weight: 500;
+            color: #f87171 !important;
+            margin-top: 0.35rem;
+            animation: fadeInError 0.2s ease-in-out;
+        }
+        .field-validation-valid {
+            display: none !important;
+        }
+        @@keyframes fadeInError {
+            from { opacity: 0; transform: translateY(-3px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
@@ -181,42 +206,42 @@
             </div>
         </div>
 
-        <form asp-controller="Account" asp-action="RegisterStudent" method="post">
+        <form asp-controller="Account" asp-action="RegisterStudent" method="post" id="studentRegisterForm">
             @Html.AntiForgeryToken()
 
             <!-- Full Name -->
             <div class="mb-3">
-                <label class="field-label">Student Full Name *</label>
+                <label class="field-label">Student Full Name <span class="text-danger fw-bold">*</span></label>
                 <div class="custom-input-group">
                     <div class="input-icon">
                         <i class="bi bi-person"></i>
                     </div>
                     <input asp-for="FullName" class="custom-control" placeholder="e.g. Rahul Sharma" autofocus />
                 </div>
-                <span asp-validation-for="FullName" class="text-danger small mt-1 d-block"></span>
+                <span asp-validation-for="FullName" class="field-validation-error"></span>
             </div>
 
             <!-- Email & Mobile row -->
             <div class="row g-2 mb-3">
                 <div class="col-12 col-sm-6">
-                    <label class="field-label">Email Address *</label>
+                    <label class="field-label">Email Address <span class="text-danger fw-bold">*</span></label>
                     <div class="custom-input-group">
                         <div class="input-icon">
                             <i class="bi bi-envelope"></i>
                         </div>
                         <input asp-for="Email" class="custom-control" placeholder="rahul@example.com" />
                     </div>
-                    <span asp-validation-for="Email" class="text-danger small mt-1 d-block"></span>
+                    <span asp-validation-for="Email" class="field-validation-error"></span>
                 </div>
                 <div class="col-12 col-sm-6">
-                    <label class="field-label">Mobile Number *</label>
+                    <label class="field-label">Mobile Number <span class="text-danger fw-bold">*</span></label>
                     <div class="custom-input-group">
                         <div class="input-icon">
                             <i class="bi bi-phone"></i>
                         </div>
                         <input asp-for="Mobile" class="custom-control" placeholder="10-digit mobile" maxlength="10" />
                     </div>
-                    <span asp-validation-for="Mobile" class="text-danger small mt-1 d-block"></span>
+                    <span asp-validation-for="Mobile" class="field-validation-error"></span>
                 </div>
             </div>
 
@@ -230,7 +255,7 @@
                         </div>
                         <input asp-for="ParentName" class="custom-control" placeholder="Father / Mother name" />
                     </div>
-                    <span asp-validation-for="ParentName" class="text-danger small mt-1 d-block"></span>
+                    <span asp-validation-for="ParentName" class="field-validation-error"></span>
                 </div>
                 <div class="col-12 col-sm-6">
                     <label class="field-label">Parent Mobile</label>
@@ -240,14 +265,14 @@
                         </div>
                         <input asp-for="ParentMobile" class="custom-control" placeholder="Parent contact" maxlength="10" />
                     </div>
-                    <span asp-validation-for="ParentMobile" class="text-danger small mt-1 d-block"></span>
+                    <span asp-validation-for="ParentMobile" class="field-validation-error"></span>
                 </div>
             </div>
 
             <!-- Password & Confirm Password -->
             <div class="row g-2 mb-4">
                 <div class="col-12 col-sm-6">
-                    <label class="field-label">Password *</label>
+                    <label class="field-label">Password <span class="text-danger fw-bold">*</span></label>
                     <div class="custom-input-group">
                         <div class="input-icon">
                             <i class="bi bi-lock"></i>
@@ -257,10 +282,10 @@
                             <i class="bi bi-eye" id="togglePasswordIcon"></i>
                         </button>
                     </div>
-                    <span asp-validation-for="Password" class="text-danger small mt-1 d-block"></span>
+                    <span asp-validation-for="Password" class="field-validation-error"></span>
                 </div>
                 <div class="col-12 col-sm-6">
-                    <label class="field-label">Confirm Password *</label>
+                    <label class="field-label">Confirm Password <span class="text-danger fw-bold">*</span></label>
                     <div class="custom-input-group">
                         <div class="input-icon">
                             <i class="bi bi-shield-check"></i>
@@ -270,7 +295,7 @@
                             <i class="bi bi-eye" id="toggleConfirmIcon"></i>
                         </button>
                     </div>
-                    <span asp-validation-for="ConfirmPassword" class="text-danger small mt-1 d-block"></span>
+                    <span asp-validation-for="ConfirmPassword" class="field-validation-error"></span>
                 </div>
             </div>
 
@@ -316,6 +341,39 @@
 
             setupEyeToggle('togglePasswordBtn', 'passwordInput', 'togglePasswordIcon');
             setupEyeToggle('toggleConfirmBtn', 'confirmPasswordInput', 'toggleConfirmIcon');
+        });
+    </script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        $(function () {
+            // Keep input group border in sync with input-validation-error state
+            $('form').on('keyup change blur', 'input', function () {
+                var $input = $(this);
+                var $group = $input.closest('.custom-input-group');
+                setTimeout(function () {
+                    if ($input.hasClass('input-validation-error')) {
+                        $group.addClass('has-error');
+                    } else {
+                        $group.removeClass('has-error');
+                    }
+                }, 50);
+            });
+            $('form').on('submit', function () {
+                var $form = $(this);
+                setTimeout(function () {
+                    $form.find('input').each(function () {
+                        var $input = $(this);
+                        var $group = $input.closest('.custom-input-group');
+                        if ($input.hasClass('input-validation-error')) {
+                            $group.addClass('has-error');
+                        } else {
+                            $group.removeClass('has-error');
+                        }
+                    });
+                }, 50);
+            });
         });
     </script>
 </body>

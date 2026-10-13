@@ -40,6 +40,12 @@
         border-color: #3b82f6;
         box-shadow: 0 0 0 3.5px rgba(59, 130, 246, 0.2);
     }
+    .input-group-custom.has-error {
+        border-color: #ef4444 !important;
+    }
+    .input-group-custom.has-error:focus-within {
+        box-shadow: 0 0 0 3.5px rgba(239, 68, 68, 0.25) !important;
+    }
     .input-group-custom .input-icon {
         padding: 0.75rem 0.25rem 0.75rem 1rem;
         color: #64748b;
@@ -183,9 +189,9 @@
                         <div class="input-icon">
                             <i class="bi bi-book"></i>
                         </div>
-                        <input asp-for="CourseName" placeholder="e.g. 10th Standard State Board" required />
+                        <input asp-for="CourseName" placeholder="e.g. 10th Standard State Board" />
                     </div>
-                    <span asp-validation-for="CourseName" class="text-danger small mt-1 d-block"></span>
+                    <span asp-validation-for="CourseName" class="field-validation-error"></span>
                 </div>
 
                 <!-- Duration & Status Row -->
@@ -198,7 +204,7 @@
                             </div>
                             <input asp-for="Duration" id="durationInput" placeholder="e.g. 1 Year, 6 Months" />
                         </div>
-                        <span asp-validation-for="Duration" class="text-danger small mt-1 d-block"></span>
+                        <span asp-validation-for="Duration" class="field-validation-error"></span>
 
                         <!-- Quick Duration Chips -->
                         <div class="d-flex gap-1 flex-wrap mt-2 align-items-center">
@@ -235,7 +241,7 @@
                         </div>
                         <textarea asp-for="Description" placeholder="Brief outline of target students and curriculum milestones"></textarea>
                     </div>
-                    <span asp-validation-for="Description" class="text-danger small mt-1 d-block"></span>
+                    <span asp-validation-for="Description" class="field-validation-error"></span>
                 </div>
 
                 <!-- Step 2: Syllabus Subject Mapping -->
@@ -368,6 +374,36 @@
             }
 
             updateSelectedCount();
+        });
+    </script>
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(function () {
+            $('form').on('keyup change blur', 'input, textarea', function () {
+                var $input = $(this);
+                var $group = $input.closest('.input-group-custom');
+                setTimeout(function () {
+                    if ($input.hasClass('input-validation-error')) {
+                        $group.addClass('has-error');
+                    } else {
+                        $group.removeClass('has-error');
+                    }
+                }, 50);
+            });
+            $('form').on('submit', function () {
+                var $form = $(this);
+                setTimeout(function () {
+                    $form.find('input, textarea').each(function () {
+                        var $input = $(this);
+                        var $group = $input.closest('.input-group-custom');
+                        if ($input.hasClass('input-validation-error')) {
+                            $group.addClass('has-error');
+                        } else {
+                            $group.removeClass('has-error');
+                        }
+                    });
+                }, 50);
+            });
         });
     </script>
 }
