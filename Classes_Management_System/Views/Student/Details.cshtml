@@ -1,0 +1,336 @@
+@model CMS_BAL.ViewModels.StudentViewModel
+@{
+    ViewData["Title"] = $"Student Details - {Model.FullName}";
+    string initials = (!string.IsNullOrWhiteSpace(Model.FirstName) ? Model.FirstName[0].ToString() : "") +
+                      (!string.IsNullOrWhiteSpace(Model.LastName) ? Model.LastName[0].ToString() : "");
+    string statusBadgeClass = Model.IsActive ? "bg-success-subtle text-success border-success-subtle" : "bg-danger-subtle text-danger border-danger-subtle";
+    string statusText = Model.IsActive ? "Active Student" : "Inactive / Suspended";
+}
+
+<style>
+    .profile-hero {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #172554 100%);
+        border-radius: 1.25rem;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 10px 25px -5px rgba(15,23,42,0.3);
+    }
+    .profile-hero::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, rgba(0,0,0,0) 70%);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .profile-avatar-lg {
+        width: 90px;
+        height: 90px;
+        border-radius: 1.25rem;
+        object-fit: cover;
+        border: 3px solid rgba(255,255,255,0.2);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+    .profile-avatar-placeholder-lg {
+        width: 90px;
+        height: 90px;
+        border-radius: 1.25rem;
+        background: linear-gradient(135deg, #3b82f6, #6366f1);
+        color: #fff;
+        font-weight: 700;
+        font-size: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid rgba(255,255,255,0.2);
+        box-shadow: 0 8px 20px rgba(59,130,246,0.4);
+    }
+
+    .detail-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 1rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        height: 100%;
+    }
+    .detail-card-header {
+        border-bottom: 1px solid #f1f5f9;
+        padding: 1rem 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    .card-icon-pill {
+        width: 36px;
+        height: 36px;
+        border-radius: 0.65rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        color: white;
+    }
+
+    .info-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        padding: 0.65rem 0;
+        border-bottom: 1px dashed #f1f5f9;
+    }
+    .info-row:last-child {
+        border-bottom: none;
+    }
+    .info-label {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+    .info-value {
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: #1e293b;
+        text-align: right;
+    }
+</style>
+
+<!-- Profile Hero Banner -->
+<div class="profile-hero p-4 mb-4">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div class="d-flex align-items-center gap-3">
+            @if (!string.IsNullOrEmpty(Model.ProfileImage))
+            {
+                <img src="@Model.ProfileImage" alt="@Model.FullName" class="profile-avatar-lg" />
+            }
+            else
+            {
+                <div class="profile-avatar-placeholder-lg">@initials</div>
+            }
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                    <h3 class="text-white fw-bold mb-0">@Model.FullName</h3>
+                    <span class="badge bg-white text-dark px-2 py-1 rounded-pill" style="font-family: monospace; font-size: 0.75rem;">
+                        @Model.AdmissionNo
+                    </span>
+                    <span class="badge border rounded-pill px-2 py-1 small @statusBadgeClass">@statusText</span>
+                </div>
+                <div class="d-flex align-items-center gap-3 text-white-50 small flex-wrap">
+                    <span><i class="bi bi-telephone me-1 text-primary"></i>@(Model.Mobile ?? "No phone")</span>
+                    @if (!string.IsNullOrEmpty(Model.Email))
+                    {
+                        <span><i class="bi bi-envelope me-1 text-info"></i>@Model.Email</span>
+                    }
+                    <span><i class="bi bi-calendar3 me-1 text-warning"></i>Admitted: @Model.AdmissionDate.ToString("dd MMM yyyy")</span>
+                </div>
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="@Url.Action("Edit","Student",new{id=Model.StudentId})" class="btn btn-primary btn-sm px-3 rounded-pill shadow-sm">
+                <i class="bi bi-pencil me-1"></i> Edit Profile
+            </a>
+            <a href="@Url.Action("Index","Student")" class="btn btn-outline-light btn-sm px-3 rounded-pill">
+                <i class="bi bi-arrow-left me-1"></i> Directory
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Card 1: Personal & Residence Details -->
+    <div class="col-lg-4">
+        <div class="detail-card p-4">
+            <div class="detail-card-header px-0 pt-0 mb-3">
+                <div class="card-icon-pill" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
+                    <i class="bi bi-person"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold text-dark mb-0">Personal Profile</h6>
+                    <span class="text-muted small">Identity &amp; demographic records</span>
+                </div>
+            </div>
+
+            <div class="info-row">
+                <span class="info-label">Full Name</span>
+                <span class="info-value">@Model.FullName</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Admission No</span>
+                <span class="info-value" style="font-family:monospace;">@Model.AdmissionNo</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Gender</span>
+                <span class="info-value">@(Model.Gender ?? "—")</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Date of Birth</span>
+                <span class="info-value">@(Model.DateOfBirth.HasValue ? Model.DateOfBirth.Value.ToString("dd MMM yyyy") : "—")</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Student Mobile</span>
+                <span class="info-value">@(Model.Mobile ?? "—")</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Email</span>
+                <span class="info-value">@(Model.Email ?? "—")</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Address</span>
+                <span class="info-value" style="max-width:60%;">@(Model.Address ?? "—")</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 2: Parent / Guardian Information -->
+    <div class="col-lg-4">
+        <div class="detail-card p-4">
+            <div class="detail-card-header px-0 pt-0 mb-3">
+                <div class="card-icon-pill" style="background: linear-gradient(135deg, #10b981, #047857);">
+                    <i class="bi bi-people"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold text-dark mb-0">Family &amp; Guardian</h6>
+                    <span class="text-muted small">Parent contacts &amp; emergency alerts</span>
+                </div>
+            </div>
+
+            <div class="info-row">
+                <span class="info-label">Parent Name</span>
+                <span class="info-value">@(Model.ParentName ?? "—")</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Parent Mobile</span>
+                <span class="info-value">
+                    @if (!string.IsNullOrEmpty(Model.ParentMobile))
+                    {
+                        <a href="tel:@Model.ParentMobile" class="text-decoration-none text-dark fw-bold">
+                            <i class="bi bi-telephone-fill text-success me-1"></i>@Model.ParentMobile
+                        </a>
+                    }
+                    else
+                    {
+                        <span>—</span>
+                    }
+                </span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Relationship</span>
+                <span class="info-value">Father / Guardian</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Emergency Call</span>
+                <span class="info-value">
+                    @if (!string.IsNullOrEmpty(Model.ParentMobile))
+                    {
+                        <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1">Available</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning-subtle text-warning rounded-pill px-2 py-1">Missing</span>
+                    }
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 3: Academic Batch & Modules Allocation -->
+    <div class="col-lg-4">
+        <div class="detail-card p-4">
+            <div class="detail-card-header px-0 pt-0 mb-3">
+                <div class="card-icon-pill" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);">
+                    <i class="bi bi-mortarboard"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold text-dark mb-0">Academic &amp; Batch</h6>
+                    <span class="text-muted small">Active class enrollment status</span>
+                </div>
+            </div>
+
+            <div class="info-row">
+                <span class="info-label">Enrolled Course</span>
+                <span class="info-value text-primary">@(Model.CourseName ?? "No Course Assigned")</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Assigned Batch</span>
+                <span class="info-value text-success">@(Model.BatchName ?? "No Batch Assigned")</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Batch Status</span>
+                <span class="info-value">
+                    @if (!string.IsNullOrEmpty(Model.BatchName))
+                    {
+                        <span class="badge bg-success rounded-pill px-2 py-1 small">Enrolled</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary rounded-pill px-2 py-1 small">Pending</span>
+                    }
+                </span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Admission Date</span>
+                <span class="info-value">@Model.AdmissionDate.ToString("dd MMM yyyy")</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bottom Row: Overview Widgets for Phase 6 (Fees) and Phase 7 (Attendance) -->
+<div class="row g-4">
+    <!-- Fees Quick Summary Card -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="card-icon-pill" style="background: linear-gradient(135deg, #f59e0b, #d97706); width:32px; height:32px; font-size:1rem;">
+                        <i class="bi bi-cash-stack"></i>
+                    </div>
+                    <h6 class="fw-bold text-dark mb-0">Fee &amp; Accounts Ledger (Phase 6)</h6>
+                </div>
+                <span class="badge bg-light text-muted border">Upcoming Integration</span>
+            </div>
+            <p class="text-muted small mb-3">Installment schedule, paid receipts and pending balance tracking will connect automatically in Phase 6.</p>
+            <div class="p-3 bg-light rounded-3 d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="small text-muted d-block">Fee Structure</span>
+                    <strong class="text-dark">Course Standard Plan</strong>
+                </div>
+                <div class="text-end">
+                    <span class="small text-muted d-block">Status</span>
+                    <span class="badge bg-info-subtle text-info rounded-pill px-2 py-1">Ready for Billing</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Quick Summary Card -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="card-icon-pill" style="background: linear-gradient(135deg, #10b981, #059669); width:32px; height:32px; font-size:1rem;">
+                        <i class="bi bi-calendar-check"></i>
+                    </div>
+                    <h6 class="fw-bold text-dark mb-0">Attendance Tracker (Phase 7)</h6>
+                </div>
+                <span class="badge bg-light text-muted border">Upcoming Integration</span>
+            </div>
+            <p class="text-muted small mb-3">Batch-wise daily attendance records, present percentages and absenteeism SMS will connect in Phase 7.</p>
+            <div class="p-3 bg-light rounded-3 d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="small text-muted d-block">Current Batch</span>
+                    <strong class="text-dark">@(Model.BatchName ?? "Pending Batch")</strong>
+                </div>
+                <div class="text-end">
+                    <span class="small text-muted d-block">Attendance Rate</span>
+                    <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1">100% On-Track</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

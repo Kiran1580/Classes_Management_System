@@ -58,6 +58,13 @@ namespace Classes_Management_System.Controllers
                 new Claim("RoleId", user.RoleId.ToString())
             };
 
+            // Fetch and attach RBAC Permission Claims
+            var permissions = await _authService.GetUserPermissionsAsync(user.UserId);
+            foreach (var perm in permissions)
+            {
+                claims.Add(new Claim("Permission", perm));
+            }
+
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var authProperties = new AuthenticationProperties
             {
@@ -159,15 +166,7 @@ namespace Classes_Management_System.Controllers
 
         private IActionResult RedirectUserByRole(string? role = null)
         {
-            role ??= User.FindFirstValue(ClaimTypes.Role);
-
-            return role switch
-            {
-                "Admin" => RedirectToAction("Index", "Dashboard", new { area = "Admin" }),
-                "Teacher" => RedirectToAction("Index", "Dashboard", new { area = "Teacher" }),
-                "Student" => RedirectToAction("Index", "Dashboard", new { area = "Student" }),
-                _ => RedirectToAction("Index", "Home")
-            };
+            return RedirectToAction("Index", "Dashboard");
         }
     }
 }

@@ -5,6 +5,11 @@
 USE ClassesManagementDb;
 GO
 
+SET ANSI_NULLS ON;
+GO
+SET QUOTED_IDENTIFIER ON;
+GO
+
 -- 1. Register Student
 CREATE OR ALTER PROCEDURE sp_RegisterStudent
     @FullName NVARCHAR(100),
@@ -16,6 +21,7 @@ CREATE OR ALTER PROCEDURE sp_RegisterStudent
 AS
 BEGIN
     SET NOCOUNT ON;
+    SET QUOTED_IDENTIFIER ON;
     
     -- Check if email exists
     IF EXISTS (SELECT 1 FROM Users WHERE LOWER(Email) = LOWER(LTRIM(RTRIM(@Email))))
@@ -70,6 +76,7 @@ CREATE OR ALTER PROCEDURE sp_RegisterTeacher
 AS
 BEGIN
     SET NOCOUNT ON;
+    SET QUOTED_IDENTIFIER ON;
 
     -- Check if email exists
     IF EXISTS (SELECT 1 FROM Users WHERE LOWER(Email) = LOWER(LTRIM(RTRIM(@Email))))
@@ -118,6 +125,7 @@ CREATE OR ALTER PROCEDURE sp_GetPendingRegistrations
 AS
 BEGIN
     SET NOCOUNT ON;
+    SET QUOTED_IDENTIFIER ON;
 
     SELECT 
         u.UserId,
@@ -145,6 +153,7 @@ CREATE OR ALTER PROCEDURE sp_ApproveUser
 AS
 BEGIN
     SET NOCOUNT ON;
+    SET QUOTED_IDENTIFIER ON;
 
     UPDATE Users 
     SET IsActive = 1, UpdatedAt = GETDATE() 
@@ -168,6 +177,7 @@ CREATE OR ALTER PROCEDURE sp_RejectUser
 AS
 BEGIN
     SET NOCOUNT ON;
+    SET QUOTED_IDENTIFIER ON;
 
     DELETE FROM Students WHERE UserId = @UserId;
     DELETE FROM Teachers WHERE UserId = @UserId;

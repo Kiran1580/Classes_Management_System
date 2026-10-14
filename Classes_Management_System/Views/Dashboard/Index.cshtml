@@ -1,0 +1,352 @@
+@model CMS_BAL.ViewModels.UnifiedDashboardViewModel
+@{
+    ViewData["Title"] = Model.IsAdmin ? "Executive Dashboard" : Model.IsTeacher ? "Faculty Dashboard" : "Student Desk";
+}
+
+<style>
+    .stat-card {
+        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        cursor: default;
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12) !important;
+    }
+    .quick-action-card {
+        transition: all 0.2s ease;
+        text-decoration: none;
+    }
+    .quick-action-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.08) !important;
+        border-color: #3b82f6 !important;
+    }
+</style>
+
+@if (Model.IsAdmin)
+{
+    <!-- ========================================== -->
+    <!-- 1. ADMIN DASHBOARD VIEW                    -->
+    <!-- ========================================== -->
+    var admin = Model.AdminStats ?? new CMS_DAL.Models.AdminDashboardStats();
+
+    <!-- Welcome Banner -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: white;">
+        <div class="card-body p-4">
+            <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
+                <div>
+                    <span class="badge bg-primary px-3 py-1 rounded-pill fw-semibold mb-2">
+                        <i class="bi bi-shield-check me-1"></i> System Administration
+                    </span>
+                    <h3 class="fw-bold mb-1 text-white">Welcome, @(Model.UserFullName) 👋</h3>
+                    <p class="text-light text-opacity-75 mb-0 small">
+                        Real-time operational snapshot across admissions, courses, batches and finance.
+                    </p>
+                </div>
+                <div class="d-flex gap-2 flex-wrap">
+                    @if (Model.PendingRegistrationsCount > 0)
+                    {
+                        <a asp-area="" asp-controller="UserApproval" asp-action="Index" class="btn btn-warning fw-bold px-3">
+                            <i class="bi bi-bell-fill me-1"></i> @Model.PendingRegistrationsCount Pending Approvals
+                        </a>
+                    }
+                    <a asp-area="" asp-controller="Student" asp-action="Admission" class="btn btn-primary fw-semibold px-3 shadow-sm">
+                        <i class="bi bi-person-plus-fill me-1"></i> Walk-in Admission
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Metric Cards Grid -->
+    <div class="row g-3 mb-4">
+        <!-- Students -->
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 h-100 stat-card">
+                <div class="card-body d-flex align-items-center justify-content-between p-3">
+                    <div>
+                        <div class="text-secondary small fw-semibold text-uppercase" style="font-size: 0.72rem;">Students</div>
+                        <div class="fs-3 fw-bold text-dark mt-1">@admin.TotalStudents</div>
+                        <a asp-area="" asp-controller="Student" asp-action="Index" class="text-primary text-decoration-none small" style="font-size: 0.75rem;">
+                            View Directory <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                    <div class="rounded-3 bg-primary bg-opacity-10 p-3 text-primary fs-3">
+                        <i class="bi bi-mortarboard-fill"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Batches -->
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 h-100 stat-card">
+                <div class="card-body d-flex align-items-center justify-content-between p-3">
+                    <div>
+                        <div class="text-secondary small fw-semibold text-uppercase" style="font-size: 0.72rem;">Active Batches</div>
+                        <div class="fs-3 fw-bold text-dark mt-1">@admin.TotalBatches</div>
+                        <a asp-area="" asp-controller="Batch" asp-action="Index" class="text-info text-decoration-none small" style="font-size: 0.75rem;">
+                            Manage Batches <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                    <div class="rounded-3 bg-info bg-opacity-10 p-3 text-info fs-3">
+                        <i class="bi bi-collection-fill"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Teachers -->
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 h-100 stat-card">
+                <div class="card-body d-flex align-items-center justify-content-between p-3">
+                    <div>
+                        <div class="text-secondary small fw-semibold text-uppercase" style="font-size: 0.72rem;">Faculty Staff</div>
+                        <div class="fs-3 fw-bold text-dark mt-1">@admin.TotalTeachers</div>
+                        <span class="text-muted small" style="font-size: 0.75rem;">Registered teachers</span>
+                    </div>
+                    <div class="rounded-3 bg-warning bg-opacity-10 p-3 text-warning fs-3">
+                        <i class="bi bi-person-video3"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inquiries / Pending -->
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 h-100 stat-card">
+                <div class="card-body d-flex align-items-center justify-content-between p-3">
+                    <div>
+                        <div class="text-secondary small fw-semibold text-uppercase" style="font-size: 0.72rem;">Approvals Queue</div>
+                        <div class="fs-3 fw-bold @(Model.PendingRegistrationsCount > 0 ? "text-danger" : "text-success") mt-1">
+                            @Model.PendingRegistrationsCount
+                        </div>
+                        <a asp-area="" asp-controller="UserApproval" asp-action="Index" class="text-secondary text-decoration-none small" style="font-size: 0.75rem;">
+                            Review Signups <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                    <div class="rounded-3 @(Model.PendingRegistrationsCount > 0 ? "bg-danger bg-opacity-10 text-danger" : "bg-success bg-opacity-10 text-success") p-3 fs-3">
+                        <i class="bi bi-person-check-fill"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Operations Shortcuts -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-header bg-white border-bottom py-3 px-4">
+            <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-grid-fill text-primary me-2"></i> Quick Module Actions</h6>
+        </div>
+        <div class="card-body p-4">
+            <div class="row g-3">
+                <div class="col-12 col-sm-6 col-md-4 col-xl">
+                    <a asp-area="" asp-controller="Student" asp-action="Admission" class="card border p-3 rounded-3 quick-action-card text-dark d-flex align-items-center gap-3">
+                        <div class="rounded-circle bg-primary bg-opacity-10 p-3 text-primary fs-5">
+                            <i class="bi bi-person-plus"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold small">New Admission</div>
+                            <small class="text-muted" style="font-size: 0.75rem;">Enroll walk-in student</small>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-12 col-sm-6 col-md-4 col-xl">
+                    <a asp-area="" asp-controller="Batch" asp-action="Index" class="card border p-3 rounded-3 quick-action-card text-dark d-flex align-items-center gap-3">
+                        <div class="rounded-circle bg-info bg-opacity-10 p-3 text-info fs-5">
+                            <i class="bi bi-people"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold small">Batch Management</div>
+                            <small class="text-muted" style="font-size: 0.75rem;">Timings &amp; teachers</small>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-12 col-sm-6 col-md-4 col-xl">
+                    <a asp-area="" asp-controller="Course" asp-action="Index" class="card border p-3 rounded-3 quick-action-card text-dark d-flex align-items-center gap-3">
+                        <div class="rounded-circle bg-success bg-opacity-10 p-3 text-success fs-5">
+                            <i class="bi bi-book"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold small">Courses &amp; Subjects</div>
+                            <small class="text-muted" style="font-size: 0.75rem;">Curriculum &amp; fees</small>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-12 col-sm-6 col-md-4 col-xl">
+                    <a asp-area="" asp-controller="UserApproval" asp-action="Index" class="card border p-3 rounded-3 quick-action-card text-dark d-flex align-items-center gap-3">
+                        <div class="rounded-circle bg-warning bg-opacity-10 p-3 text-warning fs-5">
+                            <i class="bi bi-check2-circle"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold small">User Approvals</div>
+                            <small class="text-muted" style="font-size: 0.75rem;">Pending requests</small>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-12 col-sm-6 col-md-4 col-xl">
+                    <a asp-area="" asp-controller="Teacher" asp-action="Index" class="card border p-3 rounded-3 quick-action-card text-dark d-flex align-items-center gap-3">
+                        <div class="rounded-circle p-3 fs-5" style="background-color: rgba(99, 102, 241, 0.1); color: #6366f1;">
+                            <i class="bi bi-person-video3"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold small">Faculty Staff</div>
+                            <small class="text-muted" style="font-size: 0.75rem;">Manage teachers</small>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else if (Model.IsTeacher)
+{
+    <!-- ========================================== -->
+    <!-- 2. TEACHER / FACULTY DASHBOARD VIEW        -->
+    <!-- ========================================== -->
+    var teacher = Model.TeacherStats ?? new CMS_DAL.Models.TeacherDashboardStats();
+
+    <div class="card border-0 shadow-sm rounded-4 p-4 text-white mb-4" style="background: linear-gradient(135deg, #1e3a8a 0%, #1e293b 100%);">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div>
+                <span class="badge bg-warning text-dark px-3 py-1 rounded-pill fw-semibold mb-2">
+                    <i class="bi bi-person-video3 me-1"></i> Faculty Desk
+                </span>
+                <h3 class="fw-bold mb-1 text-white">Welcome, @(Model.UserFullName) 👨‍🏫</h3>
+                <p class="text-light text-opacity-75 mb-0 small">
+                    Track your assigned batches, mark student attendance, and evaluate performance.
+                </p>
+            </div>
+            <div class="d-flex gap-2">
+                <a asp-area="" asp-controller="Profile" asp-action="Index" class="btn btn-outline-light fw-semibold px-3">
+                    <i class="bi bi-person-circle me-1"></i> My Profile
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Teacher Metric Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-sm-6 col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 p-3 stat-card">
+                <div class="text-secondary small fw-semibold text-uppercase">My Batches</div>
+                <div class="fs-2 fw-bold text-dark mt-1">@teacher.MyBatchesCount</div>
+                <small class="text-primary">Assigned teaching batches</small>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 p-3 stat-card">
+                <div class="text-secondary small fw-semibold text-uppercase">Learners Enrolled</div>
+                <div class="fs-2 fw-bold text-dark mt-1">@teacher.TotalStudentsEnrolled</div>
+                <small class="text-success">Active learners</small>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 p-3 stat-card">
+                <div class="text-secondary small fw-semibold text-uppercase">Today's Lectures</div>
+                <div class="fs-2 fw-bold text-dark mt-1">@teacher.TodayLecturesCount</div>
+                <small class="text-info">Sessions scheduled</small>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 p-3 stat-card">
+                <div class="text-secondary small fw-semibold text-uppercase">Upcoming Exams</div>
+                <div class="fs-2 fw-bold text-dark mt-1">@teacher.UpcomingExamsCount</div>
+                <small class="text-danger">Tests &amp; grading</small>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <!-- ========================================== -->
+    <!-- 3. STUDENT DASHBOARD VIEW                  -->
+    <!-- ========================================== -->
+    var student = Model.StudentStats ?? new CMS_DAL.Models.StudentDashboardStats();
+
+    <!-- Student Welcome Card -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 text-white mb-4" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div>
+                <span class="badge bg-white text-primary px-3 py-1 rounded-pill fw-semibold mb-2">
+                    <i class="bi bi-mortarboard-fill me-1"></i> Student Desk
+                </span>
+                <h3 class="fw-bold mb-1 text-white">Hello, @(Model.StudentProfile?.FullName ?? Model.UserFullName) 🎒</h3>
+                <p class="text-white text-opacity-75 mb-0 small">
+                    Enrolled in: <strong>@(string.IsNullOrEmpty(student.CourseName) ? "Pending Batch Assignment" : $"{student.CourseName} ({student.BatchName})")</strong>
+                </p>
+            </div>
+            <div class="d-flex gap-2">
+                <a asp-area="" asp-controller="Profile" asp-action="Index" class="btn btn-outline-light fw-semibold px-3">
+                    <i class="bi bi-person-lines-fill me-1"></i> My Profile
+                </a>
+                <a href="#" class="btn btn-warning fw-bold px-3">
+                    <i class="bi bi-qr-code me-1"></i> Pay Fees
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Incomplete Profile Warning Banner -->
+    @if (Model.IsStudentProfileIncomplete)
+    {
+        <div class="alert alert-warning border-0 shadow-sm rounded-3 d-flex flex-wrap align-items-center justify-content-between p-3 mb-4 gap-2">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-exclamation-triangle-fill fs-4 text-warning"></i>
+                <div>
+                    <strong class="d-block text-dark">Action Required: Your student profile is incomplete!</strong>
+                    <small class="text-secondary">Please complete your Date of Birth, Gender, Residential Address, and Photo to complete your official student identity.</small>
+                </div>
+            </div>
+            <a asp-area="" asp-controller="Profile" asp-action="Index" class="btn btn-sm btn-warning fw-semibold px-3 text-nowrap">
+                Complete Profile Now <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+    }
+
+    <!-- Student Stats Grid -->
+    <div class="row g-3 mb-4">
+        <!-- Attendance -->
+        <div class="col-12 col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 p-3 text-center stat-card">
+                <div class="text-secondary small fw-semibold text-uppercase">Attendance</div>
+                <div class="fs-2 fw-bold text-primary mt-1">@student.AttendancePercentage%</div>
+                <small class="text-success"><i class="bi bi-check2-circle"></i> Overall Attendance</small>
+            </div>
+        </div>
+
+        <!-- Total Fees -->
+        <div class="col-12 col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 p-3 text-center stat-card">
+                <div class="text-secondary small fw-semibold text-uppercase">Total Course Fee</div>
+                <div class="fs-2 fw-bold text-dark mt-1">₹@student.TotalFees.ToString("N0")</div>
+                <small class="text-muted">Assigned fee</small>
+            </div>
+        </div>
+
+        <!-- Paid Fees -->
+        <div class="col-12 col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 p-3 text-center stat-card">
+                <div class="text-secondary small fw-semibold text-uppercase">Fees Paid</div>
+                <div class="fs-2 fw-bold text-success mt-1">₹@student.PaidFees.ToString("N0")</div>
+                <small class="text-success"><i class="bi bi-shield-check"></i> Verified &amp; Paid</small>
+            </div>
+        </div>
+
+        <!-- Pending Fees -->
+        <div class="col-12 col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 p-3 text-center stat-card">
+                <div class="text-secondary small fw-semibold text-uppercase">Balance Due</div>
+                <div class="fs-2 fw-bold text-danger mt-1">₹@student.PendingFees.ToString("N0")</div>
+                @if (student.PendingPaymentReviews > 0)
+                {
+                    <small class="text-warning"><i class="bi bi-clock-history"></i> Verification in progress</small>
+                }
+                else
+                {
+                    <small class="text-danger">Installment pending</small>
+                }
+            </div>
+        </div>
+    </div>
+}

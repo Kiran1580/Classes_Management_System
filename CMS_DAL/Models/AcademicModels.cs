@@ -67,12 +67,30 @@ namespace CMS_DAL.Models
         public DateTime? JoiningDate { get; set; }
         public string? ProfileImage { get; set; }
         public bool IsActive { get; set; } = true;
+        public DateTime CreatedAt { get; set; }
+        public int AssignedBatchesCount { get; set; }
+    }
+
+    public class TeacherBatch
+    {
+        public int BatchSubjectId { get; set; }
+        public int BatchId { get; set; }
+        public string BatchName { get; set; } = string.Empty;
+        public int CourseId { get; set; }
+        public string CourseName { get; set; } = string.Empty;
+        public int SubjectId { get; set; }
+        public string SubjectName { get; set; } = string.Empty;
+        public string? RoomNo { get; set; }
+        public TimeSpan? StartTime { get; set; }
+        public TimeSpan? EndTime { get; set; }
+        public int EnrolledStudentsCount { get; set; }
+        public string BatchStatus { get; set; } = "Active";
     }
 
     public class Student
     {
         public int StudentId { get; set; }
-        public int UserId { get; set; }
+        public int? UserId { get; set; }
         public string AdmissionNo { get; set; } = string.Empty;
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
@@ -87,5 +105,14 @@ namespace CMS_DAL.Models
         public DateTime AdmissionDate { get; set; }
         public string? ProfileImage { get; set; }
         public bool IsActive { get; set; } = true;
+        public DateTime CreatedAt { get; set; }
+
+        // Associated Enrollment Details
+        public int? EnrollmentId { get; set; }
+        public int? BatchId { get; set; }
+        public string? BatchName { get; set; }
+        public int? CourseId { get; set; }
+        public string? CourseName { get; set; }
+        public string? EnrollmentStatus { get; set; }
     }
 }

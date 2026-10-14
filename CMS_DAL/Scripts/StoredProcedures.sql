@@ -5,6 +5,10 @@
 
 USE ClassesManagementDb;
 GO
+SET ANSI_NULLS ON;
+GO
+SET QUOTED_IDENTIFIER ON;
+GO
 
 -- ==========================================================
 -- 1. USERS & AUTHENTICATION STORED PROCEDURES

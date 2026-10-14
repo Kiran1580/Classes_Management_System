@@ -20,12 +20,29 @@ namespace CMS_DAL.Repositories.Implementations
 
         private IDbConnection connection() => _connectionFactory.CreateConnection();
 
-        public async Task<IEnumerable<Course>> GetAllCoursesAsync()
+        public async Task<IEnumerable<Course>> GetAllCoursesAsync(bool? isActive = null)
+        {
+            using (IDbConnection con = connection())
+            {
+                DynamicParameters parms = new DynamicParameters();
+                if (isActive.HasValue)
+                {
+                    parms.Add("@IsActive", isActive.Value);
+                }
+
+                return await con.QueryAsync<Course>(
+                    "sp_GetAllCourses",
+                    parms,
+                    commandType: CommandType.StoredProcedure);
+            }
+        }
+
+        public async Task<IEnumerable<Course>> GetActiveCoursesAsync()
         {
             using (IDbConnection con = connection())
             {
                 return await con.QueryAsync<Course>(
-                    "sp_GetAllCourses",
+                    "sp_GetActiveCourses",
                     commandType: CommandType.StoredProcedure);
             }
         }

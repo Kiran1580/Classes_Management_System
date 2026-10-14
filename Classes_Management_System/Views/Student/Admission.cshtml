@@ -1,0 +1,425 @@
+@model CMS_BAL.ViewModels.StudentAdmissionViewModel
+@{
+    ViewData["Title"] = "Student Admission";
+    var activeCourses = (ViewBag.ActiveCourses as IEnumerable<CMS_BAL.ViewModels.CourseViewModel>)
+                        ?? new List<CMS_BAL.ViewModels.CourseViewModel>();
+    var courseBatches = (ViewBag.CourseBatches as IEnumerable<CMS_BAL.ViewModels.BatchViewModel>)
+                        ?? new List<CMS_BAL.ViewModels.BatchViewModel>();
+}
+
+<style>
+    .admission-banner {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #172554 100%);
+        border-radius: 1.25rem;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 10px 25px -5px rgba(15,23,42,0.3);
+    }
+    .admission-banner::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, rgba(0,0,0,0) 70%);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .form-section-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 1rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+    .form-section-header {
+        border-bottom: 1px solid #f1f5f9;
+        padding: 1rem 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    .section-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 0.65rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        color: white;
+    }
+
+    .avatar-preview-box {
+        width: 110px;
+        height: 110px;
+        border-radius: 1rem;
+        border: 2px dashed #cbd5e1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8fafc;
+        overflow: hidden;
+        position: relative;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+    .avatar-preview-box:hover {
+        border-color: #3b82f6;
+        background: #eff6ff;
+    }
+    .avatar-preview-box img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+</style>
+
+<!-- Banner Header -->
+<div class="admission-banner p-4 mb-4">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div class="d-flex align-items-center gap-3">
+            <div style="background:rgba(59,130,246,0.2);border-radius:0.75rem;padding:0.75rem;">
+                <i class="bi bi-person-plus-fill fs-3 text-primary"></i>
+            </div>
+            <div>
+                <h2 class="text-white fw-bold mb-0">Student Admission</h2>
+                <p class="text-white-50 mb-0 small">Register student profile, parent info &amp; batch allocation</p>
+            </div>
+        </div>
+        <div>
+            <a href="@Url.Action("Index","Student")" class="btn btn-outline-light btn-sm px-3 rounded-pill">
+                <i class="bi bi-arrow-left me-1"></i> Back to Directory
+            </a>
+        </div>
+    </div>
+</div>
+
+<form method="post" action="@Url.Action("Admission","Student")"
+      enctype="multipart/form-data" id="admissionForm" novalidate>
+    @Html.AntiForgeryToken()
+
+    <div class="row g-4 mb-4">
+        <!-- ==============================================
+             LEFT COLUMN: Student Personal Details
+             ============================================== -->
+        <div class="col-lg-7">
+            <div class="form-section-card p-4">
+                <div class="form-section-header px-0 pt-0 mb-3">
+                    <div class="section-icon" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
+                        <i class="bi bi-person-badge"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold text-dark mb-0">Student Personal Information</h6>
+                        <span class="text-muted small">Identity, contact &amp; residence details</span>
+                    </div>
+                </div>
+
+                <!-- Photo Upload Row -->
+                <div class="d-flex align-items-center gap-3 mb-4 p-3 rounded-3 bg-light">
+                    <div class="avatar-preview-box" onclick="document.getElementById('profilePhotoInput').click()" title="Click to upload profile photo">
+                        <img id="avatarPreview" src="/images/avatar-default.png" alt="Avatar" style="display:none;" />
+                        <div id="avatarPlaceholder" class="text-center text-muted">
+                            <i class="bi bi-camera fs-3 text-primary"></i>
+                            <div style="font-size: 0.68rem; font-weight: 600;">Upload Photo</div>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1">
+                        <label class="form-label small fw-bold text-dark mb-1">Student Profile Photo</label>
+                        <p class="text-muted small mb-2" style="font-size: 0.75rem;">JPG, PNG or WEBP (Max 3 MB). Click photo box or button below.</p>
+                        <input type="file" name="profilePhoto" id="profilePhotoInput" class="d-none" accept=".jpg,.jpeg,.png,.webp" onchange="previewPhoto(this)" />
+                        <button type="button" class="btn btn-sm btn-outline-primary rounded-3" onclick="document.getElementById('profilePhotoInput').click()">
+                            <i class="bi bi-upload me-1"></i> Choose Photo
+                        </button>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <!-- Admission No -->
+                    <div class="col-12 col-md-6">
+                        <label class="form-label small fw-bold text-dark text-uppercase mb-1" style="font-size: 0.72rem; letter-spacing: 0.04em;">
+                            Admission No <span class="badge bg-secondary-subtle text-secondary border ms-1"><i class="bi bi-lock-fill me-1"></i>Auto-Generated</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-shield-lock"></i></span>
+                            <input type="text" class="form-control bg-light border-start-0 fw-semibold text-primary" name="AdmissionNo" id="admissionNoInput"
+                                   value="@Model.AdmissionNo" readonly style="cursor: not-allowed;" />
+                        </div>
+                    </div>
+
+                    <!-- Admission Date -->
+                    <div class="col-12 col-md-6">
+                        <label class="form-label small fw-bold text-dark text-uppercase mb-1" style="font-size: 0.72rem; letter-spacing: 0.04em;">
+                            Admission Date <span class="text-danger fw-bold">*</span>
+                        </label>
+                        <input type="date" class="form-control" name="AdmissionDate"
+                               value="@Model.AdmissionDate.ToString("yyyy-MM-dd")" required />
+                        <div class="field-error-msg" data-for="AdmissionDate" style="display:none;">
+                            <i class="bi bi-exclamation-circle-fill me-1"></i>Admission Date is required.
+                        </div>
+                    </div>
+
+                    <!-- First Name -->
+                    <div class="col-12 col-md-6">
+                        <label class="form-label small fw-bold text-dark text-uppercase mb-1" style="font-size: 0.72rem; letter-spacing: 0.04em;">
+                            First Name <span class="text-danger fw-bold">*</span>
+                        </label>
+                        <input type="text" class="form-control" name="FirstName" value="@Model.FirstName"
+                               placeholder="e.g. Rahul" required maxlength="50" />
+                        <div class="field-error-msg" data-for="FirstName" style="display:none;">
+                            <i class="bi bi-exclamation-circle-fill me-1"></i>First Name is required.
+                        </div>
+                    </div>
+
+                    <!-- Last Name -->
+                    <div class="col-12 col-md-6">
+                        <label class="form-label small fw-bold text-dark text-uppercase mb-1" style="font-size: 0.72rem; letter-spacing: 0.04em;">
+                            Last Name <span class="text-danger fw-bold">*</span>
+                        </label>
+                        <input type="text" class="form-control" name="LastName" value="@Model.LastName"
+                               placeholder="e.g. Sharma" required maxlength="50" />
+                        <div class="field-error-msg" data-for="LastName" style="display:none;">
+                            <i class="bi bi-exclamation-circle-fill me-1"></i>Last Name is required.
+                        </div>
+                    </div>
+
+                    <!-- Gender -->
+                    <div class="col-12 col-md-6">
+                        <label class="form-label small fw-bold text-dark text-uppercase mb-1" style="font-size: 0.72rem; letter-spacing: 0.04em;">Gender</label>
+                        <select class="form-select" name="Gender">
+                            <!option value="Male" @(Model.Gender == "Male" ? "selected" : "")>Male</!option>
+                            <!option value="Female" @(Model.Gender == "Female" ? "selected" : "")>Female</!option>
+                            <!option value="Other" @(Model.Gender == "Other" ? "selected" : "")>Other</!option>
+                        </select>
+                    </div>
+
+                    <!-- Date of Birth -->
+                    <div class="col-12 col-md-6">
+                        <label class="form-label small fw-bold text-dark text-uppercase mb-1" style="font-size: 0.72rem; letter-spacing: 0.04em;">Date of Birth</label>
+                        <input type="date" class="form-control" name="DateOfBirth"
+                               value="@(Model.DateOfBirth.HasValue ? Model.DateOfBirth.Value.ToString("yyyy-MM-dd") : "")" />
+                    </div>
+
+                    <!-- Student Mobile -->
+                    <div class="col-12 col-md-6">
+                        <label class="form-label small fw-bold text-dark text-uppercase mb-1" style="font-size: 0.72rem; letter-spacing: 0.04em;">
+                            Student Mobile <span class="text-danger fw-bold">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-phone"></i></span>
+                            <input type="tel" class="form-control border-start-0" name="Mobile" value="@Model.Mobile"
+                                   placeholder="e.g. 9876543210" required maxlength="10" pattern="^[0-9]{10}$" />
+                        </div>
+                        <div class="field-error-msg" data-for="Mobile" style="display:none;">
+                            <i class="bi bi-exclamation-circle-fill me-1"></i>Enter a valid 10-digit mobile number.
+                        </div>
+                    </div>
+
+                    <!-- Student Email -->
+                    <div class="col-12 col-md-6">
+                        <label class="form-label small fw-bold text-dark text-uppercase mb-1" style="font-size: 0.72rem; letter-spacing: 0.04em;">Email Address</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-envelope"></i></span>
+                            <input type="email" class="form-control border-start-0" name="Email" value="@Model.Email"
+                                   placeholder="e.g. rahul@example.com" maxlength="100" />
+                        </div>
+                    </div>
+
+                    <!-- Residential Address -->
+                    <div class="col-12">
+                        <label class="form-label small fw-bold text-dark text-uppercase mb-1" style="font-size: 0.72rem; letter-spacing: 0.04em;">Residential Address</label>
+                        <textarea class="form-control" name="Address" rows="2"
+                                  placeholder="e.g. House No. 42, Civil Lines, Sector 5..." maxlength="255">@Model.Address</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==============================================
+             RIGHT COLUMN: Parent Details & Academic Batch Allocation
+             ============================================== -->
+        <div class="col-lg-5">
+            <!-- Parent Details Card -->
+            <div class="form-section-card p-4 mb-4">
+                <div class="form-section-header px-0 pt-0 mb-3">
+                    <div class="section-icon" style="background: linear-gradient(135deg, #10b981, #047857);">
+                        <i class="bi bi-people"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold text-dark mb-0">Parent / Guardian Information</h6>
+                        <span class="text-muted small">Guardian contact &amp; emergency alerts</span>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <!-- Parent Name -->
+                    <div class="col-12">
+                        <label class="form-label small fw-bold text-dark text-uppercase mb-1" style="font-size: 0.72rem; letter-spacing: 0.04em;">
+                            Parent / Guardian Name <span class="text-danger fw-bold">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-person"></i></span>
+                            <input type="text" class="form-control border-start-0" name="ParentName" value="@Model.ParentName"
+                                   placeholder="e.g. Suresh Sharma" required maxlength="100" />
+                        </div>
+                        <div class="field-error-msg" data-for="ParentName" style="display:none;">
+                            <i class="bi bi-exclamation-circle-fill me-1"></i>Parent / Guardian Name is required.
+                        </div>
+                    </div>
+
+                    <!-- Parent Mobile -->
+                    <div class="col-12">
+                        <label class="form-label small fw-bold text-dark text-uppercase mb-1" style="font-size: 0.72rem; letter-spacing: 0.04em;">
+                            Parent Contact Mobile <span class="text-danger fw-bold">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-telephone"></i></span>
+                            <input type="tel" class="form-control border-start-0" name="ParentMobile" value="@Model.ParentMobile"
+                                   placeholder="e.g. 9876543211" required maxlength="10" pattern="^[0-9]{10}$" />
+                        </div>
+                        <div class="field-error-msg" data-for="ParentMobile" style="display:none;">
+                            <i class="bi bi-exclamation-circle-fill me-1"></i>Enter a valid 10-digit parent mobile number.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Academic Batch Allocation Card -->
+            <div class="form-section-card p-4">
+                <div class="form-section-header px-0 pt-0 mb-3">
+                    <div class="section-icon" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);">
+                        <i class="bi bi-mortarboard"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold text-dark mb-0">Course &amp; Batch Enrollment</h6>
+                        <span class="text-muted small">Assign student to active class batch</span>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <!-- Course Selection (Active courses only) -->
+                    <div class="col-12">
+                        <label class="form-label small fw-bold text-dark text-uppercase mb-1" style="font-size: 0.72rem; letter-spacing: 0.04em;">
+                            Enrolled Course <span class="text-danger fw-bold">*</span>
+                        </label>
+                        <select class="form-select" name="CourseId" id="admissionCourseSelect" onchange="onAdmissionCourseChange()" required>
+                            <option value="">-- Select Active Course --</option>
+                            @foreach (var c in activeCourses)
+                            {
+                                if (Model.CourseId == c.CourseId)
+                                {
+                                    <option value="@c.CourseId" selected>@c.CourseName</option>
+                                }
+                                else
+                                {
+                                    <option value="@c.CourseId">@c.CourseName</option>
+                                }
+                            }
+                        </select>
+                        <div class="field-error-msg" data-for="CourseId" style="display:none;">
+                            <i class="bi bi-exclamation-circle-fill me-1"></i>Please select a course.
+                        </div>
+                    </div>
+
+                    <!-- Batch Selection (Dynamic via AJAX) -->
+                    <div class="col-12">
+                        <label class="form-label small fw-bold text-dark text-uppercase mb-1" style="font-size: 0.72rem; letter-spacing: 0.04em;">
+                            Assigned Batch
+                        </label>
+                        <select class="form-select" name="BatchId" id="admissionBatchSelect">
+                            <option value="">-- Select Batch (Optional) --</option>
+                            @foreach (var b in courseBatches)
+                            {
+                                if (Model.BatchId == b.BatchId)
+                                {
+                                    <option value="@b.BatchId" selected>@b.BatchName (Cap: @b.Capacity)</option>
+                                }
+                                else
+                                {
+                                    <option value="@b.BatchId">@b.BatchName (Cap: @b.Capacity)</option>
+                                }
+                            }
+                        </select>
+                        <span class="text-muted small mt-1 d-block" style="font-size: 0.72rem;">
+                            Batches automatically refresh based on selected course.
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sticky Bottom Action Footer -->
+    <div class="card border-0 shadow-sm p-3 rounded-4 bg-white d-flex flex-row align-items-center justify-content-between">
+        <div class="text-muted small">
+            <i class="bi bi-shield-check text-success me-1"></i> Form verified with strict 3-tier validation rules.
+        </div>
+        <div class="d-flex gap-2">
+            <a href="@Url.Action("Index","Student")" class="btn btn-outline-secondary px-4 py-2 rounded-3 fw-semibold">
+                <i class="bi bi-x-circle me-1"></i> Cancel
+            </a>
+            <button type="submit" class="btn btn-primary px-4 py-2 rounded-3 fw-semibold shadow-sm"
+                    style="background: linear-gradient(135deg, #3b82f6, #6366f1); border: none;">
+                <i class="bi bi-check-circle-fill me-1"></i> Complete Admission
+            </button>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+<script>
+function previewPhoto(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const preview = document.getElementById('avatarPreview');
+            const placeholder = document.getElementById('avatarPlaceholder');
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+            placeholder.style.display = 'none';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function generateAdmissionNo() {
+    fetch('/Student/GetNextAdmissionNo')
+        .then(r => r.json())
+        .then(data => {
+            if (data && data.admissionNo) {
+                document.getElementById('admissionNoInput').value = data.admissionNo;
+            }
+        });
+}
+
+function onAdmissionCourseChange() {
+    const courseId = document.getElementById('admissionCourseSelect').value;
+    const batchSelect = document.getElementById('admissionBatchSelect');
+
+    if (!courseId) {
+        batchSelect.innerHTML = '<option value="">-- Select Batch (Optional) --</option>';
+        return;
+    }
+
+    batchSelect.innerHTML = '<option value="">Loading active batches...</option>';
+
+    fetch(`/Student/GetBatchesByCourse?courseId=${courseId}`)
+        .then(r => r.json())
+        .then(batches => {
+            let options = '<option value="">-- Select Batch (Optional) --</option>';
+            if (batches && batches.length > 0) {
+                batches.forEach(b => {
+                    options += `<option value="${b.batchId}">${b.batchName} (Seats: ${b.enrolledCount}/${b.capacity})</option>`;
+                });
+            } else {
+                options = '<option value="">-- No Active Batches for this Course --</option>';
+            }
+            batchSelect.innerHTML = options;
+        })
+        .catch(() => {
+            batchSelect.innerHTML = '<option value="">-- Error loading batches --</option>';
+        });
+}
+</script>
+}

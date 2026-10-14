@@ -20,8 +20,9 @@ BEGIN
 END
 GO
 
--- 2. Get All Courses (with subjects and active batches count)
+-- 2. Get All Courses (with subjects and active batches count, optional IsActive filter)
 CREATE OR ALTER PROCEDURE sp_GetAllCourses
+    @IsActive BIT = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -36,6 +37,28 @@ BEGIN
         (SELECT COUNT(1) FROM CourseSubjects cs WHERE cs.CourseId = c.CourseId) AS SubjectsCount,
         (SELECT COUNT(1) FROM Batches b WHERE b.CourseId = c.CourseId AND b.Status = 'Active') AS BatchesCount
     FROM Courses c
+    WHERE (@IsActive IS NULL OR c.IsActive = @IsActive)
+    ORDER BY c.CourseName ASC;
+END
+GO
+
+-- 2.1 Get Active Courses Only (For Batch assignment / dropdowns)
+CREATE OR ALTER PROCEDURE sp_GetActiveCourses
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        c.CourseId,
+        c.CourseName,
+        c.Description,
+        c.Duration,
+        c.IsActive,
+        c.CreatedAt,
+        (SELECT COUNT(1) FROM CourseSubjects cs WHERE cs.CourseId = c.CourseId) AS SubjectsCount,
+        (SELECT COUNT(1) FROM Batches b WHERE b.CourseId = c.CourseId AND b.Status = 'Active') AS BatchesCount
+    FROM Courses c
+    WHERE c.IsActive = 1
     ORDER BY c.CourseName ASC;
 END
 GO
@@ -118,19 +141,34 @@ CREATE OR ALTER PROCEDURE sp_DeleteCourse
 AS
 BEGIN
     SET NOCOUNT ON;
+    SET QUOTED_IDENTIFIER ON;
 
-    -- If batches exist for this course, don't hard delete, just deactivate
+    -- 1. Check if course is assigned to ANY batch (Batches table)
     IF EXISTS (SELECT 1 FROM Batches WHERE CourseId = @CourseId)
     BEGIN
-        UPDATE Courses SET IsActive = 0 WHERE CourseId = @CourseId;
-        SELECT 2 AS Result; -- Soft deleted (deactivated due to batch references)
+        SELECT -2 AS Result; -- Cannot delete: assigned to batches
         RETURN;
     END
 
-    DELETE FROM CourseSubjects WHERE CourseId = @CourseId;
-    DELETE FROM Courses WHERE CourseId = @CourseId;
+    -- 2. Check if course is linked to fee structures
+    IF EXISTS (SELECT 1 FROM FeeStructures WHERE CourseId = @CourseId)
+    BEGIN
+        SELECT -3 AS Result; -- Cannot delete: fee structures configured
+        RETURN;
+    END
 
-    SELECT 1 AS Result; -- Hard deleted
+    -- Safe to delete: remove course-subject mappings, then course itself
+    BEGIN TRANSACTION;
+    BEGIN TRY
+        DELETE FROM CourseSubjects WHERE CourseId = @CourseId;
+        DELETE FROM Courses WHERE CourseId = @CourseId;
+        COMMIT TRANSACTION;
+        SELECT 1 AS Result; -- Hard deleted successfully
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        SELECT 0 AS Result; -- Error
+    END CATCH
 END
 GO
 
@@ -225,19 +263,42 @@ CREATE OR ALTER PROCEDURE sp_DeleteSubject
 AS
 BEGIN
     SET NOCOUNT ON;
+    SET QUOTED_IDENTIFIER ON;
 
-    -- If mapped to batches or courses, deactivate instead of hard delete
-    IF EXISTS (SELECT 1 FROM BatchSubjects WHERE SubjectId = @SubjectId)
+    -- 1. Check if subject is assigned to ANY Course (CourseSubjects table)
+    IF EXISTS (SELECT 1 FROM CourseSubjects WHERE SubjectId = @SubjectId)
     BEGIN
-        UPDATE Subjects SET IsActive = 0 WHERE SubjectId = @SubjectId;
-        SELECT 2 AS Result;
+        SELECT -2 AS Result; -- Cannot delete: assigned to one or more courses
         RETURN;
     END
 
-    DELETE FROM CourseSubjects WHERE SubjectId = @SubjectId;
-    DELETE FROM Subjects WHERE SubjectId = @SubjectId;
+    -- 2. Check if subject is assigned to ANY Batch (BatchSubjects table)
+    IF EXISTS (SELECT 1 FROM BatchSubjects WHERE SubjectId = @SubjectId)
+    BEGIN
+        SELECT -3 AS Result; -- Cannot delete: assigned to active batches
+        RETURN;
+    END
 
-    SELECT 1 AS Result;
+    -- 3. Check if subject has lectures or exam records
+    IF EXISTS (SELECT 1 FROM ClassSessions WHERE SubjectId = @SubjectId) OR
+       EXISTS (SELECT 1 FROM ExamSubjects WHERE SubjectId = @SubjectId) OR
+       EXISTS (SELECT 1 FROM Results WHERE SubjectId = @SubjectId)
+    BEGIN
+        SELECT -4 AS Result; -- Cannot delete: historical academic records exist
+        RETURN;
+    END
+
+    -- Safe to delete
+    BEGIN TRANSACTION;
+    BEGIN TRY
+        DELETE FROM Subjects WHERE SubjectId = @SubjectId;
+        COMMIT TRANSACTION;
+        SELECT 1 AS Result; -- Hard deleted successfully
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        SELECT 0 AS Result; -- Error
+    END CATCH
 END
 GO
 

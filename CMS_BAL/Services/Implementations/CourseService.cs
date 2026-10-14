@@ -96,9 +96,25 @@ namespace CMS_BAL.Services.Implementations
         // ==========================================
         // 3. Courses CRUD
         // ==========================================
-        public async Task<IEnumerable<CourseViewModel>> GetAllCoursesAsync()
+        public async Task<IEnumerable<CourseViewModel>> GetAllCoursesAsync(bool? isActive = null)
         {
-            var courses = await _courseRepository.GetAllCoursesAsync();
+            var courses = await _courseRepository.GetAllCoursesAsync(isActive);
+            return courses.Select(c => new CourseViewModel
+            {
+                CourseId = c.CourseId,
+                CourseName = c.CourseName,
+                Description = c.Description,
+                Duration = c.Duration,
+                IsActive = c.IsActive,
+                CreatedAt = c.CreatedAt,
+                SubjectsCount = c.SubjectsCount,
+                BatchesCount = c.BatchesCount
+            }).ToList();
+        }
+
+        public async Task<IEnumerable<CourseViewModel>> GetActiveCoursesAsync()
+        {
+            var courses = await _courseRepository.GetActiveCoursesAsync();
             return courses.Select(c => new CourseViewModel
             {
                 CourseId = c.CourseId,
@@ -183,9 +199,16 @@ namespace CMS_BAL.Services.Implementations
 
         public async Task<(bool Success, string Message)> DeleteCourseAsync(int courseId)
         {
+            if (courseId <= 0) return (false, "Invalid Course ID.");
+
             int result = await _courseRepository.DeleteCourseAsync(courseId);
-            if (result == 2) return (true, "Course deactivated because it is linked to existing batches.");
-            if (result == 1) return (true, "Course deleted successfully.");
+            if (result == -2)
+                return (false, "Cannot delete this course because it is assigned to one or more batches. Please delete or reassign associated batches first.");
+            if (result == -3)
+                return (false, "Cannot delete this course because fee structures are configured for it.");
+            if (result == 1)
+                return (true, "Course deleted successfully.");
+
             return (false, "Failed to delete course.");
         }
 
@@ -263,9 +286,18 @@ namespace CMS_BAL.Services.Implementations
 
         public async Task<(bool Success, string Message)> DeleteSubjectAsync(int subjectId)
         {
+            if (subjectId <= 0) return (false, "Invalid Subject ID.");
+
             int result = await _courseRepository.DeleteSubjectAsync(subjectId);
-            if (result == 2) return (true, "Subject deactivated because it is assigned to batches.");
-            if (result == 1) return (true, "Subject deleted successfully.");
+            if (result == -2)
+                return (false, "Cannot delete this subject because it is assigned to one or more courses. Please remove it from course curriculum first.");
+            if (result == -3)
+                return (false, "Cannot delete this subject because it is assigned to active batches.");
+            if (result == -4)
+                return (false, "Cannot delete this subject because lectures or exam records are associated with it.");
+            if (result == 1)
+                return (true, "Subject deleted successfully.");
+
             return (false, "Failed to delete subject.");
         }
 

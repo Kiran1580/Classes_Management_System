@@ -1,0 +1,323 @@
+@model CMS_BAL.ViewModels.StudentProfileViewModel
+@{
+    ViewData["Title"] = "My Profile";
+    bool isStudent = User.IsInRole("Student");
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm border-0 d-flex align-items-center mb-4" role="alert">
+        <i class="bi bi-check-circle-fill text-success fs-5 me-2"></i>
+        <div><strong>Success!</strong> @TempData["SuccessMessage"]</div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-sm border-0 d-flex align-items-center mb-4" role="alert">
+        <i class="bi bi-exclamation-triangle-fill text-danger fs-5 me-2"></i>
+        <div><strong>Notice:</strong> @TempData["ErrorMessage"]</div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<!-- Top Profile Header Card -->
+<div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);">
+    <div class="card-body p-4 text-white">
+        <div class="d-flex flex-column flex-md-row align-items-center gap-4">
+            <div class="position-relative">
+                @if (!string.IsNullOrEmpty(Model.ProfileImage))
+                {
+                    <img id="headerAvatarPreview" src="@Model.ProfileImage" alt="Profile Photo" class="rounded-circle border border-3 border-white shadow" style="width: 100px; height: 100px; object-fit: cover;" />
+                }
+                else
+                {
+                    <div id="headerAvatarFallback" class="rounded-circle border border-3 border-white shadow bg-primary bg-opacity-25 d-flex align-items-center justify-content-center text-white fw-bold fs-2" style="width: 100px; height: 100px;">
+                        @(string.IsNullOrEmpty(Model.FullName) ? "U" : Model.FullName.Substring(0, 1).ToUpper())
+                    </div>
+                }
+                <span class="position-absolute bottom-0 end-0 badge rounded-circle @(Model.IsProfileComplete ? "bg-success" : "bg-warning") p-2 border border-2 border-white" title="@(Model.IsProfileComplete ? "Profile Complete" : "Profile Incomplete")">
+                    <i class="bi @(Model.IsProfileComplete ? "bi-check" : "bi-exclamation") text-white fw-bold" style="font-size: 0.75rem;"></i>
+                </span>
+            </div>
+
+            <div class="text-center text-md-start flex-grow-1">
+                <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-start gap-2 mb-1">
+                    <h3 class="fw-bold mb-0 text-white">@Model.FullName</h3>
+                    @if (isStudent)
+                    {
+                        <span class="badge bg-primary px-2 py-1 rounded-pill small">
+                            <i class="bi bi-mortarboard me-1"></i> Student
+                        </span>
+                        <span class="badge bg-light text-dark px-2 py-1 rounded-pill small font-monospace">
+                            @Model.AdmissionNo
+                        </span>
+                    }
+                    else if (User.IsInRole("Teacher"))
+                    {
+                        <span class="badge bg-warning text-dark px-2 py-1 rounded-pill small">
+                            <i class="bi bi-person-video3 me-1"></i> Faculty Member
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-primary px-2 py-1 rounded-pill small">
+                            <i class="bi bi-shield-check me-1"></i> Administrator
+                        </span>
+                    }
+                </div>
+                
+                @if (isStudent)
+                {
+                    <p class="text-white text-opacity-75 mb-2 small">
+                        Course: <strong class="text-white">@(Model.CourseName ?? "Not Assigned")</strong> &bull; Batch: <strong class="text-white">@(Model.BatchName ?? "Not Assigned")</strong>
+                    </p>
+                    <div class="d-inline-flex align-items-center gap-2">
+                        @if (Model.IsProfileComplete)
+                        {
+                            <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 rounded-pill small">
+                                <i class="bi bi-patch-check-fill me-1"></i> Profile Complete
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-3 py-1 rounded-pill small">
+                                <i class="bi bi-info-circle-fill me-1"></i> Profile Incomplete - Please complete DOB, Gender & Address
+                            </span>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-white text-opacity-75 mb-0 small">
+                        <i class="bi bi-envelope me-1"></i> @Model.Email
+                    </p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (isStudent)
+{
+    <div class="row g-4">
+        <!-- Left: Read-Only System Details -->
+        <div class="col-12 col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white border-bottom py-3 px-4">
+                    <h6 class="fw-bold mb-0 text-dark">
+                        <i class="bi bi-shield-lock text-primary me-2"></i> Academic & Admission Details
+                    </h6>
+                    <small class="text-muted">Verified institute records (Managed by Admin)</small>
+                </div>
+                <div class="card-body p-4">
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+                            <span class="text-secondary small">Admission Number</span>
+                            <span class="fw-bold text-dark font-monospace">@Model.AdmissionNo</span>
+                        </div>
+                        <div class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+                            <span class="text-secondary small">Admission Date</span>
+                            <span class="fw-semibold text-dark">@Model.AdmissionDate.ToString("dd MMM yyyy")</span>
+                        </div>
+                        <div class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+                            <span class="text-secondary small">Registered Email</span>
+                            <span class="fw-semibold text-dark text-truncate" style="max-width: 180px;">@Model.Email</span>
+                        </div>
+                        <div class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+                            <span class="text-secondary small">Mobile Number</span>
+                            <span class="fw-semibold text-dark">@(Model.Mobile ?? "N/A")</span>
+                        </div>
+                        <div class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+                            <span class="text-secondary small">Enrolled Course</span>
+                            <span class="badge bg-primary-subtle text-primary">@(Model.CourseName ?? "Pending")</span>
+                        </div>
+                        <div class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+                            <span class="text-secondary small">Assigned Batch</span>
+                            <span class="badge bg-info-subtle text-info">@(Model.BatchName ?? "Pending")</span>
+                        </div>
+                        <div class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+                            <span class="text-secondary small">Parent / Guardian</span>
+                            <span class="fw-semibold text-dark">@(Model.ParentName ?? "N/A")</span>
+                        </div>
+                        <div class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+                            <span class="text-secondary small">Parent Contact</span>
+                            <span class="fw-semibold text-dark">@(Model.ParentMobile ?? "N/A")</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Profile Completion Form -->
+        <div class="col-12 col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-white border-bottom py-3 px-4 d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="fw-bold mb-0 text-dark">
+                            <i class="bi bi-pencil-square text-success me-2"></i> Complete & Update Profile
+                        </h6>
+                        <small class="text-muted">Keep your personal contact and demographic details up to date</small>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Update" method="post" enctype="multipart/form-data" novalidate id="profileForm">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="StudentId" />
+                        <input type="hidden" asp-for="UserId" />
+                        <input type="hidden" asp-for="AdmissionNo" />
+                        <input type="hidden" asp-for="FirstName" />
+                        <input type="hidden" asp-for="LastName" />
+                        <input type="hidden" asp-for="Email" />
+                        <input type="hidden" asp-for="Mobile" />
+                        <input type="hidden" asp-for="CourseName" />
+                        <input type="hidden" asp-for="BatchName" />
+                        <input type="hidden" asp-for="ProfileImage" />
+
+                        <!-- Photo Upload with Preview -->
+                        <div class="mb-4 p-3 bg-light rounded-3 border">
+                            <label class="form-label fw-bold text-dark mb-2">
+                                <i class="bi bi-camera me-1 text-primary"></i> Profile Photograph
+                            </label>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="position-relative">
+                                    <img id="formPhotoPreview" src="@(string.IsNullOrEmpty(Model.ProfileImage) ? "/images/default-avatar.png" : Model.ProfileImage)" 
+                                         onerror="this.src='https://ui-avatars.com/api/?name=@(Uri.EscapeDataString(Model.FullName))&background=0284c7&color=fff&size=128';"
+                                         alt="Avatar Preview" 
+                                         class="rounded-circle border shadow-sm" 
+                                         style="width: 72px; height: 72px; object-fit: cover;" />
+                                </div>
+                                <div class="flex-grow-1">
+                                    <input type="file" name="photoFile" id="photoFile" class="form-control form-control-sm" accept=".jpg,.jpeg,.png,.webp" />
+                                    <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">
+                                        Allowed: JPG, PNG, WEBP (Max 3MB). High quality square photo recommended.
+                                    </small>
+                                    @if (ViewData.ModelState["PhotoFile"]?.Errors.Count > 0)
+                                    {
+                                        <span class="text-danger small">@ViewData.ModelState["PhotoFile"]?.Errors[0].ErrorMessage</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <!-- Gender -->
+                            <div class="col-12 col-sm-6">
+                                <label asp-for="Gender" class="form-label fw-semibold text-dark small">
+                                    Gender <span class="text-danger">*</span>
+                                </label>
+                                <select asp-for="Gender" class="form-select @(ViewData.ModelState["Gender"]?.Errors.Count > 0 ? "is-invalid" : "")" required>
+                                    <option value="">-- Select Gender --</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                                <span asp-validation-for="Gender" class="field-error-msg"></span>
+                            </div>
+
+                            <!-- Date of Birth -->
+                            <div class="col-12 col-sm-6">
+                                <label asp-for="DateOfBirth" class="form-label fw-semibold text-dark small">
+                                    Date of Birth <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="DateOfBirth" type="date" class="form-control @(ViewData.ModelState["DateOfBirth"]?.Errors.Count > 0 ? "is-invalid" : "")" 
+                                       max="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+                                <span asp-validation-for="DateOfBirth" class="field-error-msg"></span>
+                            </div>
+                        </div>
+
+                        <!-- Address -->
+                        <div class="mb-4">
+                            <label asp-for="Address" class="form-label fw-semibold text-dark small">
+                                Full Residential Address <span class="text-danger">*</span>
+                            </label>
+                            <textarea asp-for="Address" rows="3" class="form-control @(ViewData.ModelState["Address"]?.Errors.Count > 0 ? "is-invalid" : "")" 
+                                      placeholder="Flat/House No., Street, Landmark, City, State, PIN Code" required></textarea>
+                            <span asp-validation-for="Address" class="field-error-msg"></span>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 pt-2 border-top">
+                            <a asp-area="" asp-controller="Dashboard" asp-action="Index" class="btn btn-light px-4">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary px-4 fw-semibold shadow-sm" id="saveProfileBtn">
+                                <i class="bi bi-check2-circle me-1"></i> Save Profile Details
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <!-- General Profile Info for Staff/Admin -->
+    <div class="card border-0 shadow-sm rounded-4 p-4">
+        <h5 class="fw-bold text-dark mb-3"><i class="bi bi-person-badge text-primary me-2"></i> Account Information</h5>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label small text-secondary">Full Name</label>
+                <input type="text" class="form-control" value="@Model.FullName" readonly />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label small text-secondary">Email Address</label>
+                <input type="text" class="form-control" value="@Model.Email" readonly />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label small text-secondary">Contact Mobile</label>
+                <input type="text" class="form-control" value="@Model.Mobile" readonly />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label small text-secondary">Assigned Role</label>
+                <input type="text" class="form-control" value="@(User.IsInRole("Admin") ? "System Administrator" : "Faculty Member")" readonly />
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Live Preview of photo file input
+            const photoInput = document.getElementById('photoFile');
+            const previewImg = document.getElementById('formPhotoPreview');
+            const headerAvatarPreview = document.getElementById('headerAvatarPreview');
+
+            if (photoInput && previewImg) {
+                photoInput.addEventListener('change', function () {
+                    const file = this.files[0];
+                    if (file) {
+                        if (file.size > 3 * 1024 * 1024) {
+                            alert('Photo size exceeds 3 MB limit. Please select a smaller photo.');
+                            this.value = '';
+                            return;
+                        }
+                        const reader = new FileReader();
+                        reader.onload = function (e) {
+                            previewImg.src = e.target.result;
+                            if (headerAvatarPreview) {
+                                headerAvatarPreview.src = e.target.result;
+                            }
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+
+            // Button loading feedback
+            const profileForm = document.getElementById('profileForm');
+            const saveBtn = document.getElementById('saveProfileBtn');
+            if (profileForm && saveBtn) {
+                profileForm.addEventListener('submit', function () {
+                    if (profileForm.checkValidity()) {
+                        saveBtn.disabled = true;
+                        saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span> Saving...';
+                    }
+                });
+            }
+        });
+    </script>
+}

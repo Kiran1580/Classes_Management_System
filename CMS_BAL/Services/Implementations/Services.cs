@@ -143,6 +143,11 @@ namespace CMS_BAL.Services.Implementations
             }
             return (false, "Failed to reject request. Please try again.");
         }
+
+        public async Task<System.Collections.Generic.IEnumerable<string>> GetUserPermissionsAsync(int userId)
+        {
+            return await _userRepository.GetUserPermissionsAsync(userId);
+        }
     }
 
     public class DashboardService : IDashboardService

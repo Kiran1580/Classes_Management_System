@@ -192,5 +192,19 @@ namespace CMS_DAL.Repositories.Implementations
                 return result > 0;
             }
         }
+
+        public async Task<IEnumerable<string>> GetUserPermissionsAsync(int userId)
+        {
+            using (IDbConnection con = connection())
+            {
+                DynamicParameters parms = new DynamicParameters();
+                parms.Add("@UserId", userId);
+
+                return await con.QueryAsync<string>(
+                    "sp_GetUserPermissions",
+                    parms,
+                    commandType: CommandType.StoredProcedure);
+            }
+        }
     }
 }

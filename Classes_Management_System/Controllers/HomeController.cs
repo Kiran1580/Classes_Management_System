@@ -9,14 +9,7 @@ namespace Classes_Management_System.Controllers
         {
             if (User.Identity?.IsAuthenticated == true)
             {
-                var role = User.FindFirstValue(ClaimTypes.Role);
-                return role switch
-                {
-                    "Admin" => RedirectToAction("Index", "Dashboard", new { area = "Admin" }),
-                    "Teacher" => RedirectToAction("Index", "Dashboard", new { area = "Teacher" }),
-                    "Student" => RedirectToAction("Index", "Dashboard", new { area = "Student" }),
-                    _ => RedirectToAction("Login", "Account")
-                };
+                return RedirectToAction("Index", "Dashboard");
             }
 
             return RedirectToAction("Login", "Account");

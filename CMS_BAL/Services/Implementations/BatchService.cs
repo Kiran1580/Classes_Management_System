@@ -157,9 +157,18 @@ namespace CMS_BAL.Services.Implementations
         public async Task<(bool Success, string Message)> DeleteBatchAsync(int batchId)
         {
             int result = await _batchRepository.DeleteBatchAsync(batchId);
-            if (result == 2) return (true, "Batch deactivated because it has enrolled students.");
-            if (result == 1) return (true, "Batch deleted successfully.");
-            return (false, "Failed to delete batch.");
+            if (result == -2)
+                return (false, "Cannot delete this batch because students are enrolled in it. Please transfer or remove enrolled students before deleting.");
+            if (result == -3)
+                return (false, "Cannot delete this batch because class sessions or attendance records are linked to it.");
+            if (result == -4)
+                return (false, "Cannot delete this batch because exams are associated with it.");
+            if (result == -5)
+                return (false, "Cannot delete this batch because study materials are linked to it.");
+            if (result == 1)
+                return (true, "Batch deleted successfully.");
+
+            return (false, "Batch not found or could not be deleted.");
         }
 
         // ==========================================

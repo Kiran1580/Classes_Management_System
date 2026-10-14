@@ -17,6 +17,7 @@ namespace CMS_DAL.Repositories.Interfaces
         Task<IEnumerable<PendingRegistrationUser>> GetPendingRegistrationsAsync();
         Task<bool> ApproveUserAsync(int userId);
         Task<bool> RejectUserAsync(int userId);
+        Task<IEnumerable<string>> GetUserPermissionsAsync(int userId);
     }
 
     public interface IRoleRepository
@@ -43,7 +44,8 @@ namespace CMS_DAL.Repositories.Interfaces
 
     public interface ICourseRepository
     {
-        Task<IEnumerable<Course>> GetAllCoursesAsync();
+        Task<IEnumerable<Course>> GetAllCoursesAsync(bool? isActive = null);
+        Task<IEnumerable<Course>> GetActiveCoursesAsync();
         Task<(IEnumerable<Course> Courses, int TotalCount)> GetPagedCoursesAsync(string? searchTerm, int pageNumber, int pageSize, string sortColumn = "Id", string sortDirection = "DESC");
         Task<Course?> GetCourseByIdAsync(int courseId);
         Task<int> CreateCourseAsync(Course course);

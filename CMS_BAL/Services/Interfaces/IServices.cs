@@ -15,6 +15,7 @@ namespace CMS_BAL.Services.Interfaces
         Task<IEnumerable<PendingRegistrationUser>> GetPendingRegistrationsAsync();
         Task<(bool Success, string Message)> ApproveUserAsync(int userId);
         Task<(bool Success, string Message)> RejectUserAsync(int userId);
+        Task<IEnumerable<string>> GetUserPermissionsAsync(int userId);
     }
 
     public interface IDashboardService
@@ -31,7 +32,8 @@ namespace CMS_BAL.Services.Interfaces
         Task<PagedResult<SubjectViewModel>> GetSubjectsAsync(string? search = null, int page = 1, int pageSize = 6, string sortBy = "Name", string sortOrder = "ASC");
 
         // 2. Simple Course CRUD
-        Task<IEnumerable<CourseViewModel>> GetAllCoursesAsync();
+        Task<IEnumerable<CourseViewModel>> GetAllCoursesAsync(bool? isActive = null);
+        Task<IEnumerable<CourseViewModel>> GetActiveCoursesAsync();
         Task<CourseViewModel?> GetCourseByIdAsync(int courseId);
         Task<(bool Success, string Message, int CourseId)> CreateCourseAsync(CourseViewModel model);
         Task<(bool Success, string Message)> UpdateCourseAsync(CourseViewModel model);

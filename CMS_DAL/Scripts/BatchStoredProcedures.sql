@@ -216,25 +216,55 @@ GO
 
 -- ==========================================================
 -- 6. Delete Batch
--- Returns: 1 deleted, 2 deactivated (has enrollments), 0 fail
+-- Returns: 1 deleted, -2 has enrollments, -3 has class sessions, -4 has exams, -5 has study materials, 0 fail
 -- ==========================================================
 CREATE OR ALTER PROCEDURE sp_DeleteBatch
     @BatchId INT
 AS
 BEGIN
     SET NOCOUNT ON;
+    SET QUOTED_IDENTIFIER ON;
 
-    -- Check if batch has active enrollments
+    -- 1. Check if batch has enrolled students
     IF EXISTS (SELECT 1 FROM Enrollments WHERE BatchId = @BatchId)
     BEGIN
-        UPDATE Batches SET Status = 'Inactive' WHERE BatchId = @BatchId;
-        SELECT 2;
+        SELECT -2 AS Result; -- Cannot delete: students enrolled
         RETURN;
     END
 
-    DELETE FROM BatchSubjects WHERE BatchId = @BatchId;
-    DELETE FROM Batches WHERE BatchId = @BatchId;
-    SELECT CASE WHEN @@ROWCOUNT > 0 THEN 1 ELSE 0 END;
+    -- 2. Check if batch has class sessions (which also ties to attendance)
+    IF EXISTS (SELECT 1 FROM ClassSessions WHERE BatchId = @BatchId)
+    BEGIN
+        SELECT -3 AS Result; -- Cannot delete: class sessions or attendance records exist
+        RETURN;
+    END
+
+    -- 3. Check if batch has exams
+    IF EXISTS (SELECT 1 FROM Exams WHERE BatchId = @BatchId)
+    BEGIN
+        SELECT -4 AS Result; -- Cannot delete: exams scheduled/conducted
+        RETURN;
+    END
+
+    -- 4. Check if batch has study materials
+    IF EXISTS (SELECT 1 FROM StudyMaterials WHERE BatchId = @BatchId)
+    BEGIN
+        SELECT -5 AS Result; -- Cannot delete: study materials uploaded
+        RETURN;
+    END
+
+    -- Safe to delete: remove batch subjects mapping first, then batch
+    BEGIN TRANSACTION;
+    BEGIN TRY
+        DELETE FROM BatchSubjects WHERE BatchId = @BatchId;
+        DELETE FROM Batches WHERE BatchId = @BatchId;
+        COMMIT TRANSACTION;
+        SELECT 1 AS Result;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        SELECT 0 AS Result;
+    END CATCH
 END;
 GO
 

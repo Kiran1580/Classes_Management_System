@@ -1,0 +1,292 @@
+@model CMS_BAL.ViewModels.TeacherEditViewModel
+@{
+    ViewData["Title"] = "Edit Teacher Profile";
+}
+
+<style>
+    .form-section-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 1.25rem;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -2px rgba(0,0,0,0.02);
+    }
+    .form-section-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        border-bottom: 1px solid #f1f5f9;
+        padding-bottom: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    .section-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.15rem;
+        color: white;
+    }
+    .hero-banner {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #172554 100%);
+        border-radius: 1.25rem;
+        box-shadow: 0 10px 25px -5px rgba(15,23,42,0.3);
+    }
+    .avatar-preview-box {
+        width: 110px;
+        height: 110px;
+        border-radius: 1rem;
+        border: 2px dashed #cbd5e1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8fafc;
+        overflow: hidden;
+        position: relative;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+    .avatar-preview-box:hover {
+        border-color: #3b82f6;
+        background: #eff6ff;
+    }
+    .avatar-preview-box img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+</style>
+
+<!-- Hero Banner -->
+<div class="hero-banner p-4 mb-4 text-white">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div class="d-flex align-items-center gap-3">
+            <div class="rounded-3 d-flex align-items-center justify-content-center text-white"
+                 style="width:52px; height:52px; background: rgba(255,255,255,0.15); font-size: 1.6rem; backdrop-filter:blur(8px);">
+                <i class="bi bi-pencil-square"></i>
+            </div>
+            <div>
+                <h2 class="text-white fw-bold mb-0">Edit Teacher Profile</h2>
+                <p class="text-white-50 mb-0 small">Update contact info, qualification &amp; account status</p>
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="@Url.Action("Details","Teacher",new{id=Model.TeacherId})" class="btn btn-outline-light btn-sm px-3 rounded-pill">
+                <i class="bi bi-eye me-1"></i> View Profile
+            </a>
+            <a href="@Url.Action("Index","Teacher")" class="btn btn-outline-light btn-sm px-3 rounded-pill">
+                <i class="bi bi-arrow-left me-1"></i> Directory
+            </a>
+        </div>
+    </div>
+</div>
+
+<form method="post" action="@Url.Action("Edit","Teacher")"
+      enctype="multipart/form-data" id="editTeacherForm" novalidate>
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="TeacherId" value="@Model.TeacherId" />
+    <input type="hidden" name="UserId" value="@Model.UserId" />
+
+    <div class="row g-4 mb-4">
+        <!-- Personal & Contact Details -->
+        <div class="col-lg-8">
+            <div class="form-section-card p-4">
+                <div class="form-section-header px-0 pt-0 mb-3">
+                    <div class="section-icon" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
+                        <i class="bi bi-person-badge"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold text-dark mb-0">Faculty Details</h6>
+                        <span class="text-muted small">Update profile and contact information</span>
+                    </div>
+                </div>
+
+                <!-- Photo Upload Row -->
+                <div class="d-flex align-items-center gap-3 mb-4 p-3 rounded-3 bg-light">
+                    <div class="avatar-preview-box" onclick="document.getElementById('editPhotoInput').click()" title="Click to change photo">
+                        @if (!string.IsNullOrEmpty(Model.ProfileImage))
+                        {
+                            <img id="avatarPreview" src="@Model.ProfileImage" alt="Avatar" />
+                            <div id="avatarPlaceholder" class="text-center text-muted" style="display:none;">
+                                <i class="bi bi-camera fs-3 text-primary"></i>
+                                <div style="font-size: 0.68rem; font-weight: 600;">Upload Photo</div>
+                            </div>
+                        }
+                        else
+                        {
+                            <img id="avatarPreview" src="/images/avatar-default.png" alt="Avatar" style="display:none;" />
+                            <div id="avatarPlaceholder" class="text-center text-muted">
+                                <i class="bi bi-camera fs-3 text-primary"></i>
+                                <div style="font-size: 0.68rem; font-weight: 600;">Upload Photo</div>
+                            </div>
+                        }
+                    </div>
+                    <div class="flex-grow-1">
+                        <label class="form-label small fw-bold text-dark mb-1">Update Profile Photo</label>
+                        <p class="text-muted small mb-2" style="font-size: 0.75rem;">JPG, PNG or WEBP (Max 3 MB). Leave blank to keep existing photo.</p>
+                        <input type="file" name="profilePhoto" id="editPhotoInput" class="d-none" accept=".jpg,.jpeg,.png,.webp" onchange="previewEditPhoto(this)" />
+                        <button type="button" class="btn btn-sm btn-outline-primary rounded-3" onclick="document.getElementById('editPhotoInput').click()">
+                            <i class="bi bi-upload me-1"></i> Change Photo
+                        </button>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <!-- Employee Code (Permanent / Locked) -->
+                    <div class="col-12 col-md-6">
+                        <label class="form-label small fw-bold text-dark text-uppercase mb-1" style="font-size: 0.72rem; letter-spacing: 0.04em;">
+                            Employee Code <span class="badge bg-secondary-subtle text-secondary border ms-1"><i class="bi bi-lock-fill me-1"></i>Permanent</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-shield-lock"></i></span>
+                            <input type="text" class="form-control bg-light border-start-0 fw-semibold text-primary" name="EmployeeCode"
+                                   value="@Model.EmployeeCode" readonly style="cursor: not-allowed;" />
+                        </div>
+                    </div>
+
+                    <!-- Joining Date -->
+                    <div class="col-12 col-md-6">
+                        <label class="form-label small fw-bold text-dark text-uppercase mb-1" style="font-size: 0.72rem; letter-spacing: 0.04em;">
+                            Joining Date <span class="text-danger fw-bold">*</span>
+                        </label>
+                        <input type="date" class="form-control" name="JoiningDate"
+                               value="@Model.JoiningDate.ToString("yyyy-MM-dd")" required />
+                        <div class="field-error-msg" data-for="JoiningDate" style="display:none;">
+                            <i class="bi bi-exclamation-circle-fill me-1"></i>Joining Date is required.
+                        </div>
+                    </div>
+
+                    <!-- First Name -->
+                    <div class="col-12 col-md-6">
+                        <label class="form-label small fw-bold text-dark text-uppercase mb-1" style="font-size: 0.72rem; letter-spacing: 0.04em;">
+                            First Name <span class="text-danger fw-bold">*</span>
+                        </label>
+                        <input type="text" class="form-control" name="FirstName" value="@Model.FirstName" required maxlength="50" />
+                        <div class="field-error-msg" data-for="FirstName" style="display:none;">
+                            <i class="bi bi-exclamation-circle-fill me-1"></i>First Name is required.
+                        </div>
+                    </div>
+
+                    <!-- Last Name -->
+                    <div class="col-12 col-md-6">
+                        <label class="form-label small fw-bold text-dark text-uppercase mb-1" style="font-size: 0.72rem; letter-spacing: 0.04em;">
+                            Last Name <span class="text-danger fw-bold">*</span>
+                        </label>
+                        <input type="text" class="form-control" name="LastName" value="@Model.LastName" required maxlength="50" />
+                        <div class="field-error-msg" data-for="LastName" style="display:none;">
+                            <i class="bi bi-exclamation-circle-fill me-1"></i>Last Name is required.
+                        </div>
+                    </div>
+
+                    <!-- Mobile -->
+                    <div class="col-12 col-md-6">
+                        <label class="form-label small fw-bold text-dark text-uppercase mb-1" style="font-size: 0.72rem; letter-spacing: 0.04em;">
+                            Mobile Number <span class="text-danger fw-bold">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-telephone"></i></span>
+                            <input type="tel" class="form-control border-start-0" name="Mobile" value="@Model.Mobile"
+                                   required pattern="^[0-9]{10}$" maxlength="10" />
+                        </div>
+                        <div class="field-error-msg" data-for="Mobile" style="display:none;">
+                            <i class="bi bi-exclamation-circle-fill me-1"></i>Valid 10-digit mobile number is required.
+                        </div>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="col-12 col-md-6">
+                        <label class="form-label small fw-bold text-dark text-uppercase mb-1" style="font-size: 0.72rem; letter-spacing: 0.04em;">
+                            Email Address <span class="text-danger fw-bold">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-envelope"></i></span>
+                            <input type="email" class="form-control border-start-0" name="Email" value="@Model.Email"
+                                   required maxlength="100" />
+                        </div>
+                        <div class="field-error-msg" data-for="Email" style="display:none;">
+                            <i class="bi bi-exclamation-circle-fill me-1"></i>Valid Email address is required.
+                        </div>
+                    </div>
+
+                    <!-- Qualification -->
+                    <div class="col-12">
+                        <label class="form-label small fw-bold text-dark text-uppercase mb-1" style="font-size: 0.72rem; letter-spacing: 0.04em;">
+                            Highest Qualification <span class="text-danger fw-bold">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-mortarboard"></i></span>
+                            <input type="text" class="form-control border-start-0" name="Qualification" value="@Model.Qualification"
+                                   required maxlength="100" />
+                        </div>
+                        <div class="field-error-msg" data-for="Qualification" style="display:none;">
+                            <i class="bi bi-exclamation-circle-fill me-1"></i>Qualification is required.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status & Settings -->
+        <div class="col-lg-4">
+            <div class="form-section-card p-4">
+                <div class="form-section-header px-0 pt-0 mb-3">
+                    <div class="section-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                        <i class="bi bi-sliders"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold text-dark mb-0">Status &amp; Control</h6>
+                        <span class="text-muted small">Manage account accessibility</span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-dark text-uppercase mb-2" style="font-size: 0.72rem; letter-spacing: 0.04em;">
+                        Faculty Status
+                    </label>
+                    <div class="form-check form-switch p-0 d-flex align-items-center justify-content-between">
+                        <label class="form-check-label fw-semibold text-dark small" for="isActiveSwitch">Active Account</label>
+                        <input class="form-check-input ms-0" type="checkbox" role="switch" name="IsActive" id="isActiveSwitch" value="true" @(Model.IsActive ? "checked" : "") style="width: 2.5rem; height: 1.25rem;" />
+                    </div>
+                    <span class="text-muted small d-block mt-2" style="font-size: 0.75rem;">
+                        If turned off, this teacher cannot log in and will not be available for new batch assignments.
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sticky Bottom Actions Bar -->
+    <div class="card border-0 shadow-sm p-3 rounded-4 bg-white d-flex flex-row align-items-center justify-content-between">
+        <div class="text-muted small">
+            <i class="bi bi-check-circle text-primary me-1"></i> Changes will be saved to database with transactional safety.
+        </div>
+        <div class="d-flex gap-2">
+            <a href="@Url.Action("Index","Teacher")" class="btn btn-outline-secondary px-4 py-2 rounded-3 fw-semibold">
+                <i class="bi bi-x-circle me-1"></i> Cancel
+            </a>
+            <button type="submit" class="btn btn-primary px-4 py-2 rounded-3 fw-semibold shadow-sm"
+                    style="background: linear-gradient(135deg, #3b82f6, #6366f1); border: none;">
+                <i class="bi bi-check-circle-fill me-1"></i> Save Changes
+            </button>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+<script>
+function previewEditPhoto(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const preview = document.getElementById('avatarPreview');
+            const placeholder = document.getElementById('avatarPlaceholder');
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+            if (placeholder) placeholder.style.display = 'none';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
+}
