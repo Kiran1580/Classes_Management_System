@@ -435,7 +435,7 @@
                 </a>
 
                 <div class="nav-section-title">Operations & Reports</div>
-                <a href="#" class="sidebar-link @(currentController.Equals("Attendance", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
+                <a asp-area="" asp-controller="Attendance" asp-action="Index" class="sidebar-link @(currentController.Equals("Attendance", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
                     <i class="bi bi-calendar-check"></i> Attendance
                 </a>
                 <a href="#" class="sidebar-link @(currentController.Equals("Exam", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
@@ -454,8 +454,8 @@
                 <a asp-area="" asp-controller="Teacher" asp-action="MyBatches" class="sidebar-link @(currentController.Equals("Teacher", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
                     <i class="bi bi-calendar3"></i> My Batches
                 </a>
-                <a href="#" class="sidebar-link">
-                    <i class="bi bi-calendar-check"></i> Mark Attendance
+                <a asp-area="" asp-controller="Attendance" asp-action="Index" class="sidebar-link @(currentController.Equals("Attendance", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
+                    <i class="bi bi-calendar-check"></i> Attendance
                 </a>
                 <a href="#" class="sidebar-link">
                     <i class="bi bi-award"></i> Exam Marks Entry
@@ -478,7 +478,7 @@
                 <a href="#" class="sidebar-link">
                     <i class="bi bi-book"></i> Course & Batches
                 </a>
-                <a href="#" class="sidebar-link">
+                <a asp-area="" asp-controller="Attendance" asp-action="MyAttendance" class="sidebar-link @(currentController.Equals("Attendance", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
                     <i class="bi bi-calendar-event"></i> My Attendance
                 </a>
                 <a href="#" class="sidebar-link">

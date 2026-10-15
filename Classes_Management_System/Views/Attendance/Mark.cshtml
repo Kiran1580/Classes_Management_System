@@ -1,0 +1,603 @@
+@model Classes_Management_System.Models.MarkAttendanceViewModel
+@{
+    ViewData["Title"] = "Mark Daily Attendance";
+}
+
+<style>
+    .mark-hero {
+        background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+        border-radius: 1.25rem;
+        box-shadow: 0 10px 25px -5px rgba(30, 27, 75, 0.4);
+    }
+    .roster-card {
+        background: #ffffff;
+        border-radius: 1rem;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    }
+    .status-btn-group .btn-check:checked + .btn-outline-success {
+        background-color: #10b981;
+        color: white;
+        border-color: #10b981;
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);
+    }
+    .status-btn-group .btn-check:checked + .btn-outline-danger {
+        background-color: #ef4444;
+        color: white;
+        border-color: #ef4444;
+        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.35);
+    }
+    .status-btn-group .btn-check:checked + .btn-outline-warning {
+        background-color: #f59e0b;
+        color: white;
+        border-color: #f59e0b;
+        box-shadow: 0 2px 8px rgba(245, 158, 11, 0.35);
+    }
+    .sticky-bottom-bar {
+        position: sticky;
+        bottom: 1rem;
+        z-index: 100;
+        backdrop-filter: blur(10px);
+        background: rgba(15, 23, 42, 0.92);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 1rem;
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
+    }
+    .counter-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.35rem 0.85rem;
+        border-radius: 50rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    .counter-total   { background: rgba(255, 255, 255, 0.15); color: #ffffff; }
+    .counter-present { background: rgba(16, 185, 129, 0.25); color: #34d399; }
+    .counter-absent  { background: rgba(239, 68, 68, 0.25); color: #f87171; }
+    .counter-late    { background: rgba(245, 158, 11, 0.25); color: #fbbf24; }
+
+    .glass-pill-badge {
+        background: rgba(255, 255, 255, 0.18) !important;
+        color: #ffffff !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        font-size: 0.8rem;
+    }
+</style>
+
+<div class="container-fluid px-3 px-md-4 py-4">
+
+    <!-- Hero Header -->
+    <div class="mark-hero p-4 p-md-5 mb-4 text-white">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <span class="badge glass-pill-badge px-3 py-1 rounded-pill mb-2 fw-semibold">
+                    <i class="bi bi-clock-history me-1"></i> Daily Attendance Sheet
+                </span>
+                <h2 class="fw-bold mb-2">Mark Batch Attendance</h2>
+                <p class="text-light text-opacity-75 mb-0">
+                    Select batch and date to record student presence. By default, all students are marked Present for fast processing.
+                </p>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                <a asp-action="Index" class="btn btn-outline-light px-3 py-2 d-inline-flex align-items-center gap-2">
+                    <i class="bi bi-arrow-left"></i> Back to History
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Batch & Session Selection Card -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-md-4">
+                    <label class="form-label small fw-bold text-secondary">
+                        <i class="bi bi-people-fill text-primary me-1"></i> Select Batch <span class="text-danger">*</span>
+                    </label>
+                    <select id="selectBatch" class="form-select form-select-lg fs-6">
+                        @if (Model.AvailableBatches != null && Model.AvailableBatches.Any())
+                        {
+                            foreach (var b in Model.AvailableBatches)
+                            {
+                                <option value="@b.BatchId" selected="@(Model.SelectedBatchId == b.BatchId ? "selected" : null)">
+                                    @b.BatchName
+                                </option>
+                            }
+                        }
+                        else
+                        {
+                            <option value="">No batches assigned to you</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-3">
+                    <label class="form-label small fw-bold text-secondary">
+                        <i class="bi bi-calendar-event text-primary me-1"></i> Session Date <span class="text-danger">*</span>
+                    </label>
+                    <input type="date" id="inputDate" class="form-control form-control-lg fs-6" 
+                           value="@Model.SelectedDate.ToString("yyyy-MM-dd")" 
+                           max="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                </div>
+
+                <div class="col-12 col-md-5">
+                    <label class="form-label small fw-bold text-secondary">
+                        <i class="bi bi-chat-left-quote text-primary me-1"></i> Topic / Notes (Optional)
+                    </label>
+                    <input type="text" id="inputTopic" class="form-control form-control-lg fs-6" 
+                           placeholder="e.g. Chapter 4 - Integration, Lab Exercise..." 
+                           value="@Model.Topic" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Attendance Roster -->
+    <div class="roster-card overflow-hidden mb-4">
+        <!-- Roster Header with Counters and Quick Actions -->
+        <div class="p-3 p-md-4 border-bottom bg-light bg-opacity-50 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+            <div>
+                <h5 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                    <i class="bi bi-person-lines-fill text-primary"></i> Student Roster
+                </h5>
+                <span id="sessionStatusAlert" class="small text-muted">
+                    Loading student list...
+                </span>
+            </div>
+
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <button type="button" class="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-1" id="btnMarkAllPresent">
+                    <i class="bi bi-check-all"></i> Mark All Present
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1" id="btnMarkAllAbsent">
+                    <i class="bi bi-x-circle"></i> Mark All Absent
+                </button>
+            </div>
+        </div>
+
+        <!-- Student Table -->
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="rosterTable">
+                <thead class="table-light text-secondary small text-uppercase">
+                    <tr>
+                        <th style="width: 50px;">#</th>
+                        <th>Student Details</th>
+                        <th>Roll / Adm No</th>
+                        <th style="min-width: 280px;">Attendance Status</th>
+                        <th>Remarks</th>
+                    </tr>
+                </thead>
+                <tbody id="rosterTbody">
+                    <!-- Loaded dynamically via JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Roster Pagination Footer -->
+        <div id="rosterPaginationBar" class="py-3 px-4 d-flex flex-column flex-md-row align-items-center justify-content-between gap-3 border-top bg-white d-none">
+            <!-- Left: Showing count -->
+            <div class="text-secondary small">
+                Showing <strong class="text-dark" id="pageStartItem">1</strong> to <strong class="text-dark" id="pageEndItem">10</strong> of <strong class="text-dark" id="pageTotalCount">0</strong> students
+            </div>
+
+            <!-- Right: Rows per page & Navigation -->
+            <div class="d-flex align-items-center gap-3 flex-wrap justify-content-center justify-content-md-end">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="small text-muted fw-semibold text-nowrap">Rows per page:</span>
+                    <select id="selectPageSize" class="form-select form-select-sm" style="width: 78px;">
+                        <option value="10" selected>10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                        <option value="-1">All</option>
+                    </select>
+                </div>
+
+                <div class="small text-muted fw-medium text-nowrap">
+                    Page <strong class="text-dark" id="currPageText">1</strong> of <strong class="text-dark" id="totalPageText">1</strong>
+                </div>
+
+                <nav aria-label="Roster Pagination">
+                    <ul class="pagination pagination-sm mb-0 align-items-center" style="gap: 3px;" id="rosterPaginationList">
+                        <!-- Rendered by JS -->
+                    </ul>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="rosterEmptyState" class="text-center py-5 d-none">
+            <i class="bi bi-people text-muted" style="font-size: 3rem;"></i>
+            <h6 class="mt-3 text-secondary fw-semibold">No active students enrolled in this batch</h6>
+            <p class="text-muted small">Select another batch or enroll students to record attendance.</p>
+        </div>
+    </div>
+
+    <!-- Sticky Bottom Summary & Save Bar -->
+    <div class="sticky-bottom-bar p-3 p-md-3 text-white">
+        <div class="d-flex flex-column flex-md-row align-items-center justify-content-between gap-3">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <span class="counter-pill counter-total">
+                    Total: <span id="cntTotal">0</span>
+                </span>
+                <span class="counter-pill counter-present">
+                    <i class="bi bi-check-circle-fill"></i> Present: <span id="cntPresent">0</span>
+                </span>
+                <span class="counter-pill counter-absent">
+                    <i class="bi bi-x-circle-fill"></i> Absent: <span id="cntAbsent">0</span>
+                </span>
+                <span class="counter-pill counter-late">
+                    <i class="bi bi-clock-fill"></i> Late: <span id="cntLate">0</span>
+                </span>
+            </div>
+
+            <div class="d-flex align-items-center gap-2">
+                <a asp-action="Index" class="btn btn-sm btn-outline-light px-3">
+                    Cancel
+                </a>
+                <button type="button" class="btn btn-primary px-4 fw-semibold shadow-sm d-inline-flex align-items-center gap-2" id="btnSaveAttendance">
+                    <i class="bi bi-cloud-arrow-up-fill"></i> Save Attendance
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- SweetAlert2 for Modern Confirmations -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const batchSelect = document.getElementById("selectBatch");
+        const dateInput = document.getElementById("inputDate");
+        const topicInput = document.getElementById("inputTopic");
+        const tbody = document.getElementById("rosterTbody");
+        const emptyState = document.getElementById("rosterEmptyState");
+        const statusAlert = document.getElementById("sessionStatusAlert");
+
+        const paginationBar = document.getElementById("rosterPaginationBar");
+        const pageStartItem = document.getElementById("pageStartItem");
+        const pageEndItem = document.getElementById("pageEndItem");
+        const pageTotalCount = document.getElementById("pageTotalCount");
+        const currPageText = document.getElementById("currPageText");
+        const totalPageText = document.getElementById("totalPageText");
+        const paginationList = document.getElementById("rosterPaginationList");
+        const selectPageSize = document.getElementById("selectPageSize");
+
+        const cntTotal = document.getElementById("cntTotal");
+        const cntPresent = document.getElementById("cntPresent");
+        const cntAbsent = document.getElementById("cntAbsent");
+        const cntLate = document.getElementById("cntLate");
+
+        let currentStudents = [];
+        let currentPage = 1;
+        let pageSize = 10;
+
+        // Load students for batch & date
+        async function loadRoster() {
+            const batchId = batchSelect.value;
+            const sessionDate = dateInput.value;
+
+            if (!batchId) {
+                tbody.innerHTML = "";
+                emptyState.classList.remove("d-none");
+                paginationBar.classList.add("d-none");
+                currentStudents = [];
+                updateCounters();
+                return;
+            }
+
+            statusAlert.innerHTML = '<span class="spinner-border spinner-border-sm text-primary me-1"></span> Loading student roster...';
+
+            try {
+                const response = await fetch(`/Attendance/GetRoster?batchId=${batchId}&sessionDate=${sessionDate}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    currentStudents = data.students || [];
+                    currentPage = 1;
+
+                    if (data.topic && !topicInput.value) {
+                        topicInput.value = data.topic;
+                    }
+
+                    if (data.isAlreadyMarked) {
+                        statusAlert.innerHTML = '<span class="badge bg-warning text-dark"><i class="bi bi-pencil-fill me-1"></i> Existing Attendance Record (Editing Mode)</span>';
+                    } else {
+                        statusAlert.innerHTML = '<span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25"><i class="bi bi-plus-circle me-1"></i> New Attendance Sheet</span>';
+                    }
+
+                    renderRoster();
+                } else {
+                    Swal.fire("Error", data.message || "Failed to load roster", "error");
+                }
+            } catch (err) {
+                console.error(err);
+                statusAlert.innerHTML = '<span class="text-danger">Failed to load roster.</span>';
+            }
+        }
+
+        function renderRoster() {
+            if (currentStudents.length === 0) {
+                tbody.innerHTML = "";
+                emptyState.classList.remove("d-none");
+                paginationBar.classList.add("d-none");
+                updateCounters();
+                return;
+            }
+
+            emptyState.classList.add("d-none");
+            paginationBar.classList.remove("d-none");
+
+            const total = currentStudents.length;
+            const effectivePageSize = pageSize === -1 ? total : pageSize;
+            const totalPages = Math.max(1, Math.ceil(total / effectivePageSize));
+
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+
+            const startIndex = (currentPage - 1) * effectivePageSize;
+            const endIndex = Math.min(startIndex + effectivePageSize, total);
+            const pagedList = currentStudents.slice(startIndex, endIndex);
+
+            let html = "";
+            pagedList.forEach((s, idx) => {
+                const absoluteIndex = startIndex + idx + 1;
+                const status = s.status || "Present";
+                const remarks = s.remarks || "";
+                const avatar = s.profileImage 
+                    ? `<img src="${s.profileImage}" class="rounded-circle border" style="width:38px;height:38px;object-fit:cover;" />`
+                    : `<div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center fw-bold" style="width:38px;height:38px;">${s.fullName ? s.fullName[0].toUpperCase() : 'S'}</div>`;
+
+                html += `
+                    <tr data-student-id="${s.studentId}">
+                        <td class="text-muted small">${absoluteIndex}</td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                ${avatar}
+                                <div>
+                                    <div class="fw-bold text-dark">${s.fullName}</div>
+                                    <small class="text-secondary">${s.mobile || ''}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-secondary border font-monospace">${s.admissionNo}</span>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm status-btn-group" role="group">
+                                <input type="radio" class="btn-check status-radio" name="status_${s.studentId}" id="p_${s.studentId}" value="Present" ${status === 'Present' ? 'checked' : ''} data-id="${s.studentId}">
+                                <label class="btn btn-outline-success px-3" for="p_${s.studentId}">
+                                    <i class="bi bi-check-lg me-1"></i> Present
+                                </label>
+
+                                <input type="radio" class="btn-check status-radio" name="status_${s.studentId}" id="a_${s.studentId}" value="Absent" ${status === 'Absent' ? 'checked' : ''} data-id="${s.studentId}">
+                                <label class="btn btn-outline-danger px-3" for="a_${s.studentId}">
+                                    <i class="bi bi-x-lg me-1"></i> Absent
+                                </label>
+
+                                <input type="radio" class="btn-check status-radio" name="status_${s.studentId}" id="l_${s.studentId}" value="Late" ${status === 'Late' ? 'checked' : ''} data-id="${s.studentId}">
+                                <label class="btn btn-outline-warning px-2" for="l_${s.studentId}">
+                                    <i class="bi bi-clock me-1"></i> Late
+                                </label>
+                            </div>
+                        </td>
+                        <td>
+                            <input type="text" class="form-control form-control-sm remarks-input" placeholder="Notes (optional)" value="${remarks}" data-id="${s.studentId}" />
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+
+            // Update pagination display
+            pageStartItem.textContent = total > 0 ? startIndex + 1 : 0;
+            pageEndItem.textContent = endIndex;
+            pageTotalCount.textContent = total;
+            currPageText.textContent = currentPage;
+            totalPageText.textContent = totalPages;
+
+            renderPaginationControls(totalPages);
+            attachRowEventListeners();
+            updateCounters();
+        }
+
+        function renderPaginationControls(totalPages) {
+            let phtml = "";
+
+            // First & Prev
+            phtml += `
+                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                    <a class="page-link py-1 px-2" href="javascript:void(0)" data-page="1" title="First"><i class="bi bi-chevron-double-left"></i></a>
+                </li>
+                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                    <a class="page-link py-1 px-2" href="javascript:void(0)" data-page="${currentPage - 1}" title="Previous"><i class="bi bi-chevron-left"></i></a>
+                </li>
+            `;
+
+            // Page numbers (sliding window)
+            const startP = Math.max(1, currentPage - 2);
+            const endP = Math.min(totalPages, currentPage + 2);
+
+            for (let p = startP; p <= endP; p++) {
+                phtml += `
+                    <li class="page-item ${p === currentPage ? 'active' : ''}">
+                        <a class="page-link py-1 px-2" href="javascript:void(0)" data-page="${p}">${p}</a>
+                    </li>
+                `;
+            }
+
+            // Next & Last
+            phtml += `
+                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                    <a class="page-link py-1 px-2" href="javascript:void(0)" data-page="${currentPage + 1}" title="Next"><i class="bi bi-chevron-right"></i></a>
+                </li>
+                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                    <a class="page-link py-1 px-2" href="javascript:void(0)" data-page="${totalPages}" title="Last"><i class="bi bi-chevron-double-right"></i></a>
+                </li>
+            `;
+
+            paginationList.innerHTML = phtml;
+
+            // Attach pagination click handlers
+            paginationList.querySelectorAll(".page-link").forEach(link => {
+                link.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    const p = parseInt(this.getAttribute("data-page"));
+                    if (p && p >= 1 && p <= totalPages && p !== currentPage) {
+                        currentPage = p;
+                        renderRoster();
+                    }
+                });
+            });
+        }
+
+        selectPageSize.addEventListener("change", function () {
+            pageSize = parseInt(this.value);
+            currentPage = 1;
+            renderRoster();
+        });
+
+        function attachRowEventListeners() {
+            // Radio button changes sync to currentStudents array
+            tbody.querySelectorAll(".status-radio").forEach(radio => {
+                radio.addEventListener("change", function () {
+                    const studentId = parseInt(this.getAttribute("data-id"));
+                    const student = currentStudents.find(s => s.studentId === studentId);
+                    if (student) {
+                        student.status = this.value;
+                    }
+                    updateCounters();
+                });
+            });
+
+            // Remarks input changes sync to currentStudents array
+            tbody.querySelectorAll(".remarks-input").forEach(input => {
+                input.addEventListener("input", function () {
+                    const studentId = parseInt(this.getAttribute("data-id"));
+                    const student = currentStudents.find(s => s.studentId === studentId);
+                    if (student) {
+                        student.remarks = this.value;
+                    }
+                });
+            });
+        }
+
+        // Live Counters calculated over the entire dataset
+        function updateCounters() {
+            let total = currentStudents.length;
+            let present = 0;
+            let absent = 0;
+            let late = 0;
+
+            currentStudents.forEach(s => {
+                const st = s.status || "Present";
+                if (st === "Present") present++;
+                else if (st === "Absent") absent++;
+                else if (st === "Late") late++;
+            });
+
+            cntTotal.textContent = total;
+            cntPresent.textContent = present;
+            cntAbsent.textContent = absent;
+            cntLate.textContent = late;
+        }
+
+        // Mark All Present (across all pages)
+        document.getElementById("btnMarkAllPresent").addEventListener("click", function () {
+            currentStudents.forEach(s => s.status = "Present");
+            renderRoster();
+        });
+
+        // Mark All Absent (across all pages)
+        document.getElementById("btnMarkAllAbsent").addEventListener("click", function () {
+            currentStudents.forEach(s => s.status = "Absent");
+            renderRoster();
+        });
+
+        batchSelect.addEventListener("change", loadRoster);
+        dateInput.addEventListener("change", loadRoster);
+
+        // Save Attendance for all students across all pages
+        document.getElementById("btnSaveAttendance").addEventListener("click", async function () {
+            const batchId = parseInt(batchSelect.value);
+            const sessionDate = dateInput.value;
+            const topic = topicInput.value;
+
+            if (!batchId) {
+                Swal.fire("Warning", "Please select a batch.", "warning");
+                return;
+            }
+
+            if (currentStudents.length === 0) {
+                Swal.fire("Warning", "No students to mark in this batch.", "warning");
+                return;
+            }
+
+            const studentItems = currentStudents.map(s => ({
+                studentId: s.studentId,
+                status: s.status || "Present",
+                remarks: s.remarks ? s.remarks.trim() : null
+            }));
+
+            const confirmResult = await Swal.fire({
+                title: "Save Attendance?",
+                html: `Batch attendance will be recorded for <b>${studentItems.length} student(s)</b> on <b>${sessionDate}</b>.<br><br>
+                       <span class="text-success">Present: ${cntPresent.textContent}</span> | 
+                       <span class="text-danger">Absent: ${cntAbsent.textContent}</span> | 
+                       <span class="text-warning">Late: ${cntLate.textContent}</span>`,
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonColor: "#4f46e5",
+                cancelButtonColor: "#64748b",
+                confirmButtonText: '<i class="bi bi-check-circle me-1"></i> Confirm & Save'
+            });
+
+            if (!confirmResult.isConfirmed) return;
+
+            const payload = {
+                batchId: batchId,
+                sessionDate: sessionDate,
+                topic: topic,
+                students: studentItems
+            };
+
+            const saveBtn = document.getElementById("btnSaveAttendance");
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
+
+            try {
+                const res = await fetch("/Attendance/SaveAttendance", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    await Swal.fire({
+                        title: "Saved!",
+                        text: data.message,
+                        icon: "success",
+                        confirmButtonColor: "#4f46e5"
+                    });
+                    loadRoster();
+                } else {
+                    Swal.fire("Error", data.message || "Failed to save attendance.", "error");
+                }
+            } catch (err) {
+                console.error(err);
+                Swal.fire("Error", "Server error while saving attendance.", "error");
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '<i class="bi bi-cloud-arrow-up-fill"></i> Save Attendance';
+            }
+        });
+
+        // Initial roster load
+        loadRoster();
+    });
+</script>
