@@ -43,6 +43,22 @@ namespace Classes_Management_System.Controllers
                 var student = await _studentService.GetStudentByUserIdAsync(userId);
                 if (student == null)
                 {
+                    var fallbackUser = await _authService.GetUserByIdAsync(userId);
+                    if (fallbackUser != null)
+                    {
+                        var fallbackModel = new StudentProfileViewModel
+                        {
+                            UserId        = userId,
+                            FirstName     = fallbackUser.FullName,
+                            LastName      = "",
+                            Email         = fallbackUser.Email,
+                            Mobile        = fallbackUser.Mobile,
+                            AdmissionNo   = "PENDING-PROFILE",
+                            AdmissionDate = DateTime.Now
+                        };
+                        return View(fallbackModel);
+                    }
+
                     TempData["ErrorMessage"] = "Student profile not found. Please contact administration.";
                     return RedirectToAction("Index", "Dashboard", new { area = "Student" });
                 }

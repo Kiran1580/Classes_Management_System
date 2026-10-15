@@ -124,6 +124,34 @@ namespace CMS_BAL.Services.Implementations
             return await _userRepository.GetPendingRegistrationsAsync();
         }
 
+        public async Task<(PagedResult<PendingRegistrationUser> PagedResult, int TotalPending, int StudentPending, int TeacherPending)> GetPagedPendingRegistrationsAsync(
+            string? search = null,
+            string? role = null,
+            int page = 1,
+            int pageSize = 10,
+            string sortBy = "AppliedDate",
+            string sortOrder = "DESC")
+        {
+            page = Math.Max(1, page);
+            pageSize = pageSize > 0 ? pageSize : 10;
+
+            var (users, totalFiltered, totalPending, studentPending, teacherPending) =
+                await _userRepository.GetPagedPendingRegistrationsAsync(search, role, page, pageSize, sortBy, sortOrder);
+
+            var pagedResult = new PagedResult<PendingRegistrationUser>
+            {
+                Data = System.Linq.Enumerable.ToList(users),
+                TotalCount = totalFiltered,
+                PageNumber = page,
+                PageSize = pageSize,
+                SearchTerm = search,
+                SortColumn = sortBy,
+                SortDirection = sortOrder
+            };
+
+            return (pagedResult, totalPending, studentPending, teacherPending);
+        }
+
         public async Task<(bool Success, string Message)> ApproveUserAsync(int userId)
         {
             bool approved = await _userRepository.ApproveUserAsync(userId);

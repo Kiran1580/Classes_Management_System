@@ -15,6 +15,13 @@ namespace CMS_DAL.Repositories.Interfaces
         Task<int> RegisterStudentAsync(string fullName, string email, string? mobile, string passwordHash, string? parentName, string? parentMobile);
         Task<int> RegisterTeacherAsync(string fullName, string email, string? mobile, string passwordHash, string? qualification, string? subjectSpecialization);
         Task<IEnumerable<PendingRegistrationUser>> GetPendingRegistrationsAsync();
+        Task<(IEnumerable<PendingRegistrationUser> Users, int TotalFiltered, int TotalPending, int StudentPending, int TeacherPending)> GetPagedPendingRegistrationsAsync(
+            string? search = null,
+            string? role = null,
+            int page = 1,
+            int pageSize = 10,
+            string sortBy = "AppliedDate",
+            string sortOrder = "DESC");
         Task<bool> ApproveUserAsync(int userId);
         Task<bool> RejectUserAsync(int userId);
         Task<IEnumerable<string>> GetUserPermissionsAsync(int userId);

@@ -161,6 +161,42 @@ namespace CMS_DAL.Repositories.Implementations
             }
         }
 
+        public async Task<(IEnumerable<PendingRegistrationUser> Users, int TotalFiltered, int TotalPending, int StudentPending, int TeacherPending)> GetPagedPendingRegistrationsAsync(
+            string? search = null,
+            string? role = null,
+            int page = 1,
+            int pageSize = 10,
+            string sortBy = "AppliedDate",
+            string sortOrder = "DESC")
+        {
+            using (IDbConnection con = connection())
+            {
+                DynamicParameters parms = new DynamicParameters();
+                parms.Add("@SearchTerm", search);
+                parms.Add("@Role", role);
+                parms.Add("@PageNumber", page);
+                parms.Add("@PageSize", pageSize);
+                parms.Add("@SortColumn", sortBy);
+                parms.Add("@SortDirection", sortOrder);
+                parms.Add("@TotalCount", dbType: DbType.Int32, direction: ParameterDirection.Output);
+                parms.Add("@TotalPending", dbType: DbType.Int32, direction: ParameterDirection.Output);
+                parms.Add("@StudentPending", dbType: DbType.Int32, direction: ParameterDirection.Output);
+                parms.Add("@TeacherPending", dbType: DbType.Int32, direction: ParameterDirection.Output);
+
+                var users = await con.QueryAsync<PendingRegistrationUser>(
+                    "sp_GetPagedPendingRegistrations",
+                    parms,
+                    commandType: CommandType.StoredProcedure);
+
+                int totalCount = parms.Get<int>("@TotalCount");
+                int totalPending = parms.Get<int>("@TotalPending");
+                int studentPending = parms.Get<int>("@StudentPending");
+                int teacherPending = parms.Get<int>("@TeacherPending");
+
+                return (users, totalCount, totalPending, studentPending, teacherPending);
+            }
+        }
+
         public async Task<bool> ApproveUserAsync(int userId)
         {
             using (IDbConnection con = connection())

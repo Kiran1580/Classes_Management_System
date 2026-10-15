@@ -437,6 +437,120 @@ BEGIN
 END;
 GO
 
+-- 4.3.1 Get Paged Pending Registrations (With Search, Role Filter, Sorting, Pagination, and Metric Stats)
+CREATE OR ALTER PROCEDURE sp_GetPagedPendingRegistrations
+    @SearchTerm NVARCHAR(100) = NULL,
+    @Role NVARCHAR(50) = NULL,
+    @PageNumber INT = 1,
+    @PageSize INT = 10,
+    @SortColumn NVARCHAR(50) = 'AppliedDate',
+    @SortDirection NVARCHAR(10) = 'DESC',
+    @TotalCount INT OUTPUT,
+    @TotalPending INT OUTPUT,
+    @StudentPending INT OUTPUT,
+    @TeacherPending INT OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET QUOTED_IDENTIFIER ON;
+
+    SET @SearchTerm = LTRIM(RTRIM(@SearchTerm));
+    IF @SearchTerm = '' SET @SearchTerm = NULL;
+
+    IF @Role IS NOT NULL
+    BEGIN
+        SET @Role = LTRIM(RTRIM(@Role));
+        IF @Role = '' OR @Role = 'All' SET @Role = NULL;
+    END
+
+    IF @PageNumber IS NULL OR @PageNumber < 1 SET @PageNumber = 1;
+    IF @PageSize IS NULL OR @PageSize < 1 SET @PageSize = 10;
+
+    IF @SortColumn IS NULL OR @SortColumn = '' SET @SortColumn = 'AppliedDate';
+    IF @SortDirection IS NULL OR @SortDirection = '' SET @SortDirection = 'DESC';
+    SET @SortDirection = UPPER(@SortDirection);
+    IF @SortDirection NOT IN ('ASC', 'DESC') SET @SortDirection = 'DESC';
+
+    -- 1. Overall stats for metric cards (full pending counts)
+    SELECT 
+        @TotalPending = COUNT(1),
+        @StudentPending = SUM(CASE WHEN r.RoleName = 'Student' THEN 1 ELSE 0 END),
+        @TeacherPending = SUM(CASE WHEN r.RoleName = 'Teacher' THEN 1 ELSE 0 END)
+    FROM Users u
+    INNER JOIN Roles r ON u.RoleId = r.RoleId
+    WHERE u.IsActive = 0;
+
+    SET @TotalPending = ISNULL(@TotalPending, 0);
+    SET @StudentPending = ISNULL(@StudentPending, 0);
+    SET @TeacherPending = ISNULL(@TeacherPending, 0);
+
+    -- 2. Filtered count matching search & role
+    SELECT @TotalCount = COUNT(1)
+    FROM Users u
+    INNER JOIN Roles r ON u.RoleId = r.RoleId
+    LEFT JOIN Students s ON u.UserId = s.UserId
+    LEFT JOIN Teachers t ON u.UserId = t.UserId
+    WHERE u.IsActive = 0
+      AND (@Role IS NULL OR r.RoleName = @Role)
+      AND (@SearchTerm IS NULL OR (
+          u.FullName LIKE '%' + @SearchTerm + '%'
+          OR u.Email LIKE '%' + @SearchTerm + '%'
+          OR u.Mobile LIKE '%' + @SearchTerm + '%'
+          OR s.AdmissionNo LIKE '%' + @SearchTerm + '%'
+          OR t.EmployeeCode LIKE '%' + @SearchTerm + '%'
+          OR t.Qualification LIKE '%' + @SearchTerm + '%'
+      ));
+
+    SET @TotalCount = ISNULL(@TotalCount, 0);
+
+    -- 3. Paged & Sorted Result Set
+    SELECT 
+        u.UserId,
+        u.FullName,
+        u.Email,
+        u.Mobile,
+        u.RoleId,
+        r.RoleName,
+        u.IsActive,
+        u.CreatedAt,
+        CASE 
+            WHEN r.RoleName = 'Teacher' THEN t.Qualification
+            ELSE NULL 
+        END AS ExtraInfo,
+        CASE 
+            WHEN r.RoleName = 'Student' THEN s.AdmissionNo
+            WHEN r.RoleName = 'Teacher' THEN t.EmployeeCode
+            ELSE NULL 
+        END AS ReferenceCode
+    FROM Users u
+    INNER JOIN Roles r ON u.RoleId = r.RoleId
+    LEFT JOIN Students s ON u.UserId = s.UserId
+    LEFT JOIN Teachers t ON u.UserId = t.UserId
+    WHERE u.IsActive = 0
+      AND (@Role IS NULL OR r.RoleName = @Role)
+      AND (@SearchTerm IS NULL OR (
+          u.FullName LIKE '%' + @SearchTerm + '%'
+          OR u.Email LIKE '%' + @SearchTerm + '%'
+          OR u.Mobile LIKE '%' + @SearchTerm + '%'
+          OR s.AdmissionNo LIKE '%' + @SearchTerm + '%'
+          OR t.EmployeeCode LIKE '%' + @SearchTerm + '%'
+          OR t.Qualification LIKE '%' + @SearchTerm + '%'
+      ))
+    ORDER BY
+        CASE WHEN @SortColumn = 'name' AND @SortDirection = 'ASC' THEN u.FullName END ASC,
+        CASE WHEN @SortColumn = 'name' AND @SortDirection = 'DESC' THEN u.FullName END DESC,
+        CASE WHEN @SortColumn = 'role' AND @SortDirection = 'ASC' THEN r.RoleName END ASC,
+        CASE WHEN @SortColumn = 'role' AND @SortDirection = 'DESC' THEN r.RoleName END DESC,
+        CASE WHEN @SortColumn = 'email' AND @SortDirection = 'ASC' THEN u.Email END ASC,
+        CASE WHEN @SortColumn = 'email' AND @SortDirection = 'DESC' THEN u.Email END DESC,
+        CASE WHEN @SortColumn IN ('AppliedDate', 'CreatedAt') AND @SortDirection = 'ASC' THEN u.CreatedAt END ASC,
+        CASE WHEN @SortColumn IN ('AppliedDate', 'CreatedAt') AND @SortDirection = 'DESC' THEN u.CreatedAt END DESC,
+        u.CreatedAt DESC
+    OFFSET (@PageNumber - 1) * @PageSize ROWS
+    FETCH NEXT @PageSize ROWS ONLY;
+END;
+GO
+
 -- 4.4 Approve User
 CREATE OR ALTER PROCEDURE sp_ApproveUser
     @UserId INT
@@ -947,6 +1061,56 @@ AS
 BEGIN
     SET NOCOUNT ON;
     SET QUOTED_IDENTIFIER ON;
+
+    -- 1. If no direct link by UserId, try auto-link by Email or auto-create profile
+    IF NOT EXISTS (SELECT 1 FROM Students WHERE UserId = @UserId)
+    BEGIN
+        DECLARE @UserEmail NVARCHAR(100);
+        DECLARE @UserFullName NVARCHAR(100);
+        DECLARE @UserMobile NVARCHAR(20);
+
+        SELECT @UserEmail = LOWER(LTRIM(RTRIM(Email))),
+               @UserFullName = FullName,
+               @UserMobile = Mobile
+        FROM Users WHERE UserId = @UserId;
+
+        -- A. Auto-link if student exists with matching email and UserId IS NULL
+        IF @UserEmail IS NOT NULL AND EXISTS (SELECT 1 FROM Students WHERE LOWER(Email) = @UserEmail AND UserId IS NULL)
+        BEGIN
+            UPDATE TOP (1) Students
+            SET UserId = @UserId
+            WHERE LOWER(Email) = @UserEmail AND UserId IS NULL;
+        END
+        -- B. If User has Student role (RoleId = 3) and no Student record exists, auto-create one
+        ELSE IF NOT EXISTS (SELECT 1 FROM Students WHERE UserId = @UserId)
+        BEGIN
+            IF EXISTS (SELECT 1 FROM Users WHERE UserId = @UserId AND RoleId = 3)
+            BEGIN
+                DECLARE @NextAdmNo NVARCHAR(50);
+                EXEC sp_GetNextAdmissionNumber 'ADM', @NextAdmNo OUTPUT;
+
+                DECLARE @FName NVARCHAR(50) = @UserFullName;
+                DECLARE @LName NVARCHAR(50) = '';
+                DECLARE @SpaceIdx INT = CHARINDEX(' ', @UserFullName);
+                IF @SpaceIdx > 0
+                BEGIN
+                    SET @FName = SUBSTRING(@UserFullName, 1, @SpaceIdx - 1);
+                    SET @LName = SUBSTRING(@UserFullName, @SpaceIdx + 1, LEN(@UserFullName));
+                END
+
+                INSERT INTO Students (
+                    UserId, AdmissionNo, FirstName, LastName,
+                    Mobile, Email, AdmissionDate, IsActive, CreatedAt
+                )
+                VALUES (
+                    @UserId, @NextAdmNo, @FName, @LName,
+                    @UserMobile, @UserEmail, CAST(GETDATE() AS DATE), 1, SYSDATETIME()
+                );
+            END
+        END
+    END
+
+    -- 2. Return student profile with active enrollment info
     SELECT 
         s.StudentId,
         s.UserId,
@@ -1359,6 +1523,65 @@ BEGIN
     SET NOCOUNT ON;
     SET QUOTED_IDENTIFIER ON;
 
+    -- 1. If no direct link by UserId, try auto-link by Email or auto-create profile
+    IF NOT EXISTS (SELECT 1 FROM Teachers WHERE UserId = @UserId)
+    BEGIN
+        DECLARE @UserEmail NVARCHAR(100);
+        DECLARE @UserFullName NVARCHAR(100);
+        DECLARE @UserMobile NVARCHAR(20);
+
+        SELECT @UserEmail = LOWER(LTRIM(RTRIM(Email))),
+               @UserFullName = FullName,
+               @UserMobile = Mobile
+        FROM Users WHERE UserId = @UserId;
+
+        -- A. Auto-link if teacher exists with matching email and UserId IS NULL
+        IF @UserEmail IS NOT NULL AND EXISTS (SELECT 1 FROM Teachers WHERE LOWER(Email) = @UserEmail AND UserId IS NULL)
+        BEGIN
+            UPDATE TOP (1) Teachers
+            SET UserId = @UserId
+            WHERE LOWER(Email) = @UserEmail AND UserId IS NULL;
+        END
+        -- B. If User has Teacher role (RoleId = 2) and no Teacher record exists, auto-create one
+        ELSE IF NOT EXISTS (SELECT 1 FROM Teachers WHERE UserId = @UserId)
+        BEGIN
+            IF EXISTS (SELECT 1 FROM Users WHERE UserId = @UserId AND RoleId = 2)
+            BEGIN
+                DECLARE @NextEmpCode NVARCHAR(50);
+                DECLARE @CurYear NVARCHAR(4) = CAST(YEAR(GETDATE()) AS NVARCHAR(4));
+                DECLARE @FullPref NVARCHAR(20) = 'TCH-' + @CurYear + '-';
+                DECLARE @NextNum INT = 1;
+
+                SELECT @NextNum = ISNULL(MAX(
+                    TRY_CAST(SUBSTRING(EmployeeCode, LEN(@FullPref) + 1, 10) AS INT)
+                ), 0) + 1
+                FROM Teachers
+                WHERE EmployeeCode LIKE @FullPref + '%';
+
+                SET @NextEmpCode = @FullPref + RIGHT('0000' + CAST(@NextNum AS NVARCHAR(10)), 4);
+
+                DECLARE @TFName NVARCHAR(50) = @UserFullName;
+                DECLARE @TLName NVARCHAR(50) = '';
+                DECLARE @TSpaceIdx INT = CHARINDEX(' ', @UserFullName);
+                IF @TSpaceIdx > 0
+                BEGIN
+                    SET @TFName = SUBSTRING(@UserFullName, 1, @TSpaceIdx - 1);
+                    SET @TLName = SUBSTRING(@UserFullName, @TSpaceIdx + 1, LEN(@UserFullName));
+                END
+
+                INSERT INTO Teachers (
+                    UserId, EmployeeCode, FirstName, LastName,
+                    Mobile, Email, JoiningDate, IsActive, CreatedAt
+                )
+                VALUES (
+                    @UserId, @NextEmpCode, @TFName, @TLName,
+                    @UserMobile, @UserEmail, CAST(GETDATE() AS DATE), 1, GETDATE()
+                );
+            END
+        END
+    END
+
+    -- 2. Return teacher profile with batch count
     SELECT 
         t.TeacherId,
         t.UserId,

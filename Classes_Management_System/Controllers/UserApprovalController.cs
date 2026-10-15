@@ -16,15 +16,28 @@ namespace Classes_Management_System.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(
+            string? search = null,
+            string? role = null,
+            string? sortBy = "AppliedDate",
+            string? sortOrder = "DESC",
+            int page = 1,
+            int pageSize = 10)
         {
-            var pendingUsers = await _authService.GetPendingRegistrationsAsync();
-            return View(pendingUsers);
+            var (pagedResult, totalPending, studentPending, teacherPending) =
+                await _authService.GetPagedPendingRegistrationsAsync(search, role, page, pageSize, sortBy, sortOrder);
+
+            ViewBag.TotalPending = totalPending;
+            ViewBag.StudentPending = studentPending;
+            ViewBag.TeacherPending = teacherPending;
+            ViewBag.CurrentRole = string.IsNullOrWhiteSpace(role) ? "All" : role;
+
+            return View(pagedResult);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Approve(int id)
+        public async Task<IActionResult> Approve(int id, string? returnRole = null)
         {
             var (success, message) = await _authService.ApproveUserAsync(id);
             if (success)
@@ -36,12 +49,17 @@ namespace Classes_Management_System.Controllers
                 TempData["ErrorMessage"] = message;
             }
 
+            if (!string.IsNullOrWhiteSpace(returnRole) && !string.Equals(returnRole, "All", System.StringComparison.OrdinalIgnoreCase))
+            {
+                return RedirectToAction(nameof(Index), new { role = returnRole });
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Reject(int id)
+        public async Task<IActionResult> Reject(int id, string? returnRole = null)
         {
             var (success, message) = await _authService.RejectUserAsync(id);
             if (success)
@@ -51,6 +69,11 @@ namespace Classes_Management_System.Controllers
             else
             {
                 TempData["ErrorMessage"] = message;
+            }
+
+            if (!string.IsNullOrWhiteSpace(returnRole) && !string.Equals(returnRole, "All", System.StringComparison.OrdinalIgnoreCase))
+            {
+                return RedirectToAction(nameof(Index), new { role = returnRole });
             }
 
             return RedirectToAction(nameof(Index));

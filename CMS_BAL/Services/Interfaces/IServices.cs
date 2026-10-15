@@ -13,6 +13,13 @@ namespace CMS_BAL.Services.Interfaces
         Task<(bool Success, string Message)> RegisterStudentAsync(StudentRegisterViewModel model);
         Task<(bool Success, string Message)> RegisterTeacherAsync(TeacherRegisterViewModel model);
         Task<IEnumerable<PendingRegistrationUser>> GetPendingRegistrationsAsync();
+        Task<(PagedResult<PendingRegistrationUser> PagedResult, int TotalPending, int StudentPending, int TeacherPending)> GetPagedPendingRegistrationsAsync(
+            string? search = null,
+            string? role = null,
+            int page = 1,
+            int pageSize = 10,
+            string sortBy = "AppliedDate",
+            string sortOrder = "DESC");
         Task<(bool Success, string Message)> ApproveUserAsync(int userId);
         Task<(bool Success, string Message)> RejectUserAsync(int userId);
         Task<IEnumerable<string>> GetUserPermissionsAsync(int userId);

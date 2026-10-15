@@ -285,6 +285,56 @@ AS
 BEGIN
     SET NOCOUNT ON;
     SET QUOTED_IDENTIFIER ON;
+
+    -- 1. If no direct link by UserId, try auto-link by Email or auto-create profile
+    IF NOT EXISTS (SELECT 1 FROM Students WHERE UserId = @UserId)
+    BEGIN
+        DECLARE @UserEmail NVARCHAR(100);
+        DECLARE @UserFullName NVARCHAR(100);
+        DECLARE @UserMobile NVARCHAR(20);
+
+        SELECT @UserEmail = LOWER(LTRIM(RTRIM(Email))),
+               @UserFullName = FullName,
+               @UserMobile = Mobile
+        FROM Users WHERE UserId = @UserId;
+
+        -- A. Auto-link if student exists with matching email and UserId IS NULL
+        IF @UserEmail IS NOT NULL AND EXISTS (SELECT 1 FROM Students WHERE LOWER(Email) = @UserEmail AND UserId IS NULL)
+        BEGIN
+            UPDATE TOP (1) Students
+            SET UserId = @UserId
+            WHERE LOWER(Email) = @UserEmail AND UserId IS NULL;
+        END
+        -- B. If User has Student role (RoleId = 3) and no Student record exists, auto-create one
+        ELSE IF NOT EXISTS (SELECT 1 FROM Students WHERE UserId = @UserId)
+        BEGIN
+            IF EXISTS (SELECT 1 FROM Users WHERE UserId = @UserId AND RoleId = 3)
+            BEGIN
+                DECLARE @NextAdmNo NVARCHAR(50);
+                EXEC sp_GetNextAdmissionNumber 'ADM', @NextAdmNo OUTPUT;
+
+                DECLARE @FName NVARCHAR(50) = @UserFullName;
+                DECLARE @LName NVARCHAR(50) = '';
+                DECLARE @SpaceIdx INT = CHARINDEX(' ', @UserFullName);
+                IF @SpaceIdx > 0
+                BEGIN
+                    SET @FName = SUBSTRING(@UserFullName, 1, @SpaceIdx - 1);
+                    SET @LName = SUBSTRING(@UserFullName, @SpaceIdx + 1, LEN(@UserFullName));
+                END
+
+                INSERT INTO Students (
+                    UserId, AdmissionNo, FirstName, LastName,
+                    Mobile, Email, AdmissionDate, IsActive, CreatedAt
+                )
+                VALUES (
+                    @UserId, @NextAdmNo, @FName, @LName,
+                    @UserMobile, @UserEmail, CAST(GETDATE() AS DATE), 1, SYSDATETIME()
+                );
+            END
+        END
+    END
+
+    -- 2. Return student profile with active enrollment info
     SELECT 
         s.StudentId,
         s.UserId,

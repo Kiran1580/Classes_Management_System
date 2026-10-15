@@ -168,6 +168,65 @@ BEGIN
     SET NOCOUNT ON;
     SET QUOTED_IDENTIFIER ON;
 
+    -- 1. If no direct link by UserId, try auto-link by Email or auto-create profile
+    IF NOT EXISTS (SELECT 1 FROM Teachers WHERE UserId = @UserId)
+    BEGIN
+        DECLARE @UserEmail NVARCHAR(100);
+        DECLARE @UserFullName NVARCHAR(100);
+        DECLARE @UserMobile NVARCHAR(20);
+
+        SELECT @UserEmail = LOWER(LTRIM(RTRIM(Email))),
+               @UserFullName = FullName,
+               @UserMobile = Mobile
+        FROM Users WHERE UserId = @UserId;
+
+        -- A. Auto-link if teacher exists with matching email and UserId IS NULL
+        IF @UserEmail IS NOT NULL AND EXISTS (SELECT 1 FROM Teachers WHERE LOWER(Email) = @UserEmail AND UserId IS NULL)
+        BEGIN
+            UPDATE TOP (1) Teachers
+            SET UserId = @UserId
+            WHERE LOWER(Email) = @UserEmail AND UserId IS NULL;
+        END
+        -- B. If User has Teacher role (RoleId = 2) and no Teacher record exists, auto-create one
+        ELSE IF NOT EXISTS (SELECT 1 FROM Teachers WHERE UserId = @UserId)
+        BEGIN
+            IF EXISTS (SELECT 1 FROM Users WHERE UserId = @UserId AND RoleId = 2)
+            BEGIN
+                DECLARE @NextEmpCode NVARCHAR(50);
+                DECLARE @CurYear NVARCHAR(4) = CAST(YEAR(GETDATE()) AS NVARCHAR(4));
+                DECLARE @FullPref NVARCHAR(20) = 'TCH-' + @CurYear + '-';
+                DECLARE @NextNum INT = 1;
+
+                SELECT @NextNum = ISNULL(MAX(
+                    TRY_CAST(SUBSTRING(EmployeeCode, LEN(@FullPref) + 1, 10) AS INT)
+                ), 0) + 1
+                FROM Teachers
+                WHERE EmployeeCode LIKE @FullPref + '%';
+
+                SET @NextEmpCode = @FullPref + RIGHT('0000' + CAST(@NextNum AS NVARCHAR(10)), 4);
+
+                DECLARE @TFName NVARCHAR(50) = @UserFullName;
+                DECLARE @TLName NVARCHAR(50) = '';
+                DECLARE @TSpaceIdx INT = CHARINDEX(' ', @UserFullName);
+                IF @TSpaceIdx > 0
+                BEGIN
+                    SET @TFName = SUBSTRING(@UserFullName, 1, @TSpaceIdx - 1);
+                    SET @TLName = SUBSTRING(@UserFullName, @TSpaceIdx + 1, LEN(@UserFullName));
+                END
+
+                INSERT INTO Teachers (
+                    UserId, EmployeeCode, FirstName, LastName,
+                    Mobile, Email, JoiningDate, IsActive, CreatedAt
+                )
+                VALUES (
+                    @UserId, @NextEmpCode, @TFName, @TLName,
+                    @UserMobile, @UserEmail, CAST(GETDATE() AS DATE), 1, GETDATE()
+                );
+            END
+        END
+    END
+
+    -- 2. Return teacher profile with batch count
     SELECT 
         t.TeacherId,
         t.UserId,

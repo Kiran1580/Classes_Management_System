@@ -20,9 +20,20 @@
         var qs = new List<string>();
         qs.Add("page=" + p);
         qs.Add("pageSize=" + (customSize ?? pageSize));
-        if (!string.IsNullOrWhiteSpace(search)) qs.Add("search=" + System.Net.WebUtility.UrlEncode(search));
-        if (!string.IsNullOrWhiteSpace(sortBy)) qs.Add("sortBy=" + System.Net.WebUtility.UrlEncode(sortBy));
-        if (!string.IsNullOrWhiteSpace(sortOrder)) qs.Add("sortOrder=" + System.Net.WebUtility.UrlEncode(sortOrder));
+
+        foreach (var key in Context.Request.Query.Keys)
+        {
+            if (string.Equals(key, "page", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(key, "pageSize", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+            string val = Context.Request.Query[key].ToString();
+            if (!string.IsNullOrWhiteSpace(val))
+            {
+                qs.Add(System.Net.WebUtility.UrlEncode(key) + "=" + System.Net.WebUtility.UrlEncode(val));
+            }
+        }
         return "?" + string.Join("&", qs);
     }
 }

@@ -235,8 +235,8 @@ namespace Classes_Management_System.Controllers
             var teacher = await _teacherService.GetTeacherByUserIdAsync(currentUserId);
             if (teacher == null)
             {
-                TempData["ErrorMessage"] = "Teacher profile not found for your account.";
-                return RedirectToAction("Index", "Dashboard");
+                ViewBag.Teacher = new TeacherViewModel { FirstName = User.Identity?.Name ?? "Teacher", LastName = "", EmployeeCode = "PENDING" };
+                return View(new List<BatchViewModel>());
             }
 
             var batches = await _teacherService.GetTeacherBatchesAsync(teacher.TeacherId);

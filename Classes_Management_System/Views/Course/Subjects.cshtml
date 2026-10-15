@@ -250,42 +250,30 @@
     </div>
 </div>
 
-<!-- SUBJECTS TABLE CARD -->
-<div class="card border-0 shadow-sm rounded-3">
-    <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
-        <div>
-            <h6 class="mb-0 fw-bold text-dark">
-                <i class="bi bi-journal-bookmark-fill text-info me-2"></i>Curriculum Subjects Directory
-            </h6>
-            <small class="text-secondary" style="font-size: 0.75rem;">Manage individual subjects and link them across courses</small>
-        </div>
-        <button type="button" class="btn btn-primary btn-sm px-3 rounded-2 fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#addSubjectModal">
+<!-- SUBJECTS DIRECTORY CONTENT -->
+@if (!Model.Data.Any())
+{
+    <div class="text-center py-5">
+        <i class="bi bi-journal-text display-1 text-muted opacity-50"></i>
+        <h5 class="text-muted mt-3">No subjects found</h5>
+        <p class="text-muted small">
+            @if (!string.IsNullOrWhiteSpace(Model.SearchTerm))
+            {
+                <span>No results matched your search or filter criteria.</span>
+            }
+            else
+            {
+                <span>Start by registering your first curriculum subject.</span>
+            }
+        </p>
+        <button type="button" class="btn btn-primary btn-sm px-4 rounded-pill mt-2" data-bs-toggle="modal" data-bs-target="#addSubjectModal">
             <i class="bi bi-plus-circle me-1"></i> Add Subject
         </button>
     </div>
-
-    @if (!Model.Data.Any())
-    {
-        <div class="card-body text-center py-5">
-            <i class="bi bi-journal-text display-1 text-muted opacity-50"></i>
-            <h5 class="text-muted mt-3">No subjects found</h5>
-            <p class="text-muted small">
-                @if (!string.IsNullOrWhiteSpace(Model.SearchTerm))
-                {
-                    <span>No results matched your search or filter criteria.</span>
-                }
-                else
-                {
-                    <span>Start by registering your first curriculum subject.</span>
-                }
-            </p>
-            <button type="button" class="btn btn-primary btn-sm px-4 rounded-pill mt-2" data-bs-toggle="modal" data-bs-target="#addSubjectModal">
-                <i class="bi bi-plus-circle me-1"></i> Add Subject
-            </button>
-        </div>
-    }
-    else
-    {
+}
+else
+{
+    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0" id="subjectsTable">
                 <thead class="table-light small text-uppercase text-secondary">
@@ -378,8 +366,8 @@
 
         <!-- Subjects Pagination Bar -->
         @await Html.PartialAsync("_PaginationBar", Model)
-    }
-</div>
+    </div>
+}
 
 <!-- MODAL: ADD SUBJECT -->
 <div class="modal fade" id="addSubjectModal" tabindex="-1" aria-hidden="true">
