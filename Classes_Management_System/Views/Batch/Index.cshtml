@@ -170,6 +170,7 @@
             <div class="row g-2 align-items-end">
                 <!-- Search -->
                 <div class="col-12 col-md-4">
+                    <label class="form-label small fw-bold text-muted mb-1">Search</label>
                     <div class="input-group">
                         <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
                         <input type="text" class="form-control border-start-0" id="searchInput" name="search"
@@ -184,7 +185,8 @@
                 </div>
 
                 <!-- Course Filter (Active Courses Only) -->
-                <div class="col-12 col-md-3">
+                <div class="col-12 col-md-4">
+                    <label class="form-label small fw-bold text-muted mb-1">Course</label>
                     <select class="form-select" name="courseFilter" onchange="document.getElementById('filterForm').submit()">
                         <option value="">All Courses</option>
                         @foreach (var c in activeCourses)
@@ -203,6 +205,7 @@
 
                 <!-- Status Filter -->
                 <div class="col-12 col-md-3">
+                    <label class="form-label small fw-bold text-muted mb-1">Status</label>
                     <select class="form-select" name="statusFilter" onchange="document.getElementById('filterForm').submit()">
                         <option value="">All Status</option>
                         <!option value="Active" @(currentStatusFilter == "Active" ? "selected" : "")>Active</!option>
@@ -212,9 +215,9 @@
                 </div>
 
                 <!-- Search Button -->
-                <div class="col-12 col-md-2">
+                <div class="col-12 col-md-1">
                     <button type="submit" class="btn btn-primary w-100">
-                        <i class="bi bi-funnel me-1"></i>Filter
+                        <i class="bi bi-funnel"></i>
                     </button>
                 </div>
 
@@ -257,10 +260,17 @@
         <h5 class="text-muted mt-3">No batches found</h5>
         <p class="text-muted small">
             @if (!string.IsNullOrEmpty(currentSearch) || currentCourseFilter.HasValue || !string.IsNullOrEmpty(currentStatusFilter))
-            { <span>Try adjusting your filters.</span> }
+            {
+                <span>No results matched your search or filter criteria.</span>
+            }
             else
-            { <span>Click "Add New Batch" to create the first batch.</span> }
+            {
+                <span>Start by creating your first batch into a course.</span>
+            }
         </p>
+        <button type="button" class="btn btn-primary btn-sm px-4 rounded-pill mt-2" data-bs-toggle="modal" data-bs-target="#addBatchModal">
+            <i class="bi bi-plus-circle me-1"></i> Add Batch
+        </button>
     </div>
 }
 else
