@@ -475,7 +475,7 @@
                 <a asp-area="" asp-controller="Dashboard" asp-action="Index" class="sidebar-link @(currentController.Equals("Dashboard", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
                     <i class="bi bi-speedometer2"></i> Dashboard
                 </a>
-                <a href="#" class="sidebar-link">
+                <a asp-area="" asp-controller="StudentCourses" asp-action="Index" class="sidebar-link @(currentController.Equals("StudentCourses", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
                     <i class="bi bi-book"></i> Course & Batches
                 </a>
                 <a asp-area="" asp-controller="Attendance" asp-action="MyAttendance" class="sidebar-link @(currentController.Equals("Attendance", StringComparison.OrdinalIgnoreCase) ? "active" : "")">

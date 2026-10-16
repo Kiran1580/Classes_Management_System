@@ -115,4 +115,70 @@ namespace CMS_DAL.Models
         public string? CourseName { get; set; }
         public string? EnrollmentStatus { get; set; }
     }
+
+    public class StudentEnrolledBatch
+    {
+        public int EnrollmentId { get; set; }
+        public int StudentId { get; set; }
+        public int BatchId { get; set; }
+        public string BatchName { get; set; } = string.Empty;
+        public string BatchStatus { get; set; } = "Active";
+        public DateTime? BatchStartDate { get; set; }
+        public DateTime? BatchEndDate { get; set; }
+        public string? StartTimeStr { get; set; }
+        public string? EndTimeStr { get; set; }
+        public string? RoomNo { get; set; }
+        public int Capacity { get; set; }
+        public int EnrolledCount { get; set; }
+
+        public DateTime EnrollmentDate { get; set; }
+        public DateTime? EnrollmentStartDate { get; set; }
+        public DateTime? EnrollmentEndDate { get; set; }
+        public string EnrollmentStatus { get; set; } = "Active";
+
+        public int CourseId { get; set; }
+        public string CourseName { get; set; } = string.Empty;
+        public string? CourseDescription { get; set; }
+        public string? CourseDuration { get; set; }
+        public string? AcademicYearName { get; set; }
+
+        public int TotalSessions { get; set; }
+        public int AttendedSessions { get; set; }
+    }
+
+    public class StudentBatchSubject
+    {
+        public int BatchId { get; set; }
+        public int SubjectId { get; set; }
+        public string SubjectName { get; set; } = string.Empty;
+        public string? SubjectDescription { get; set; }
+        public int? TeacherId { get; set; }
+        public string TeacherName { get; set; } = "Faculty Not Assigned";
+        public string? TeacherQualification { get; set; }
+        public string? TeacherEmail { get; set; }
+        public string? TeacherMobile { get; set; }
+    }
+
+    public class BatchFacultyAssignment
+    {
+        public int BatchId { get; set; }
+        public string BatchName { get; set; } = string.Empty;
+        public int CourseId { get; set; }
+        public string CourseName { get; set; } = string.Empty;
+        public int SubjectId { get; set; }
+        public string SubjectName { get; set; } = string.Empty;
+        public int? BatchSubjectId { get; set; }
+        public int? TeacherId { get; set; }
+        public string? TeacherName { get; set; }
+        public string? TeacherEmail { get; set; }
+        public string? EmployeeCode { get; set; }
+    }
+
+    public class BatchFacultyAssignmentSaveRequest
+    {
+        public int SubjectId { get; set; }
+        public int? TeacherId { get; set; }
+    }
 }
+
+

@@ -67,5 +67,7 @@ namespace CMS_BAL.Services.Interfaces
         Task<(bool Success, string Message)> UpdateBatchAsync(BatchViewModel model);
         Task<(bool Success, string Message)> DeleteBatchAsync(int batchId);
         Task<BatchStatsViewModel> GetBatchStatsAsync();
+        Task<BatchFacultyAssignmentViewModel?> GetBatchFacultyDetailsAsync(int batchId);
+        Task<(bool Success, string Message)> SaveBatchFacultyAssignmentsAsync(SaveBatchFacultyRequest request);
     }
 }

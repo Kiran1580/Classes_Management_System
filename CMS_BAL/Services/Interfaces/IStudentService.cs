@@ -35,5 +35,7 @@ namespace CMS_BAL.Services.Interfaces
         Task<string> GetNextAdmissionNumberAsync();
 
         Task<IEnumerable<BatchViewModel>> GetBatchesByCourseAsync(int courseId);
+
+        Task<StudentCoursesAndBatchesViewModel> GetStudentCoursesAndBatchesAsync(int? userId = null, int? studentId = null);
     }
 }

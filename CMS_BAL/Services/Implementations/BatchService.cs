@@ -12,10 +12,17 @@ namespace CMS_BAL.Services.Implementations
     public class BatchService : IBatchService
     {
         private readonly IBatchRepository _batchRepository;
+        private readonly ITeacherRepository _teacherRepository;
+        private readonly ICourseRepository _courseRepository;
 
-        public BatchService(IBatchRepository batchRepository)
+        public BatchService(
+            IBatchRepository batchRepository,
+            ITeacherRepository teacherRepository,
+            ICourseRepository courseRepository)
         {
-            _batchRepository = batchRepository;
+            _batchRepository   = batchRepository;
+            _teacherRepository = teacherRepository;
+            _courseRepository  = courseRepository;
         }
 
         // ==========================================
@@ -185,6 +192,67 @@ namespace CMS_BAL.Services.Implementations
                 TotalEnrolled     = enrolled,
                 CoursesWithBatches = coursesWithBatches
             };
+        }
+
+        // ==========================================
+        // 8. Faculty Assignments
+        // ==========================================
+        public async Task<BatchFacultyAssignmentViewModel?> GetBatchFacultyDetailsAsync(int batchId)
+        {
+            var batch = await _batchRepository.GetBatchByIdAsync(batchId);
+            if (batch == null) return null;
+
+            var assignments = await _batchRepository.GetBatchFacultyAssignmentsAsync(batchId);
+            var activeTeachers = await _teacherRepository.GetAllActiveTeachersAsync();
+            var allSubjects = await _courseRepository.GetAllSubjectsAsync();
+
+            var vm = new BatchFacultyAssignmentViewModel
+            {
+                BatchId = batch.BatchId,
+                BatchName = batch.BatchName,
+                CourseId = batch.CourseId,
+                CourseName = batch.CourseName,
+                Subjects = assignments.Select(a => new BatchSubjectFacultyItem
+                {
+                    SubjectId = a.SubjectId,
+                    SubjectName = a.SubjectName,
+                    TeacherId = a.TeacherId,
+                    TeacherName = a.TeacherName,
+                    TeacherEmail = a.TeacherEmail,
+                    EmployeeCode = a.EmployeeCode
+                }).ToList(),
+                AvailableTeachers = activeTeachers.Select(t => new TeacherSelectOption
+                {
+                    TeacherId = t.TeacherId,
+                    FullName = t.FullName,
+                    EmployeeCode = t.EmployeeCode
+                }).ToList(),
+                AvailableSubjects = allSubjects.Where(s => s.IsActive).Select(s => new SubjectSelectOption
+                {
+                    SubjectId = s.SubjectId,
+                    SubjectName = s.SubjectName
+                }).ToList()
+            };
+
+            return vm;
+        }
+
+        public async Task<(bool Success, string Message)> SaveBatchFacultyAssignmentsAsync(SaveBatchFacultyRequest request)
+        {
+            if (request.BatchId <= 0)
+                return (false, "Invalid Batch ID.");
+
+            var repoItems = request.Assignments.Select(a => new BatchFacultyAssignmentSaveRequest
+            {
+                SubjectId = a.SubjectId,
+                TeacherId = a.TeacherId
+            }).ToList();
+
+            bool saved = await _batchRepository.SaveBatchFacultyAssignmentsAsync(request.BatchId, repoItems);
+            if (!saved)
+                return (false, "Failed to save faculty assignments.");
+
+            return (true, "Faculty assignments saved successfully!");
         }
 
         // ==========================================

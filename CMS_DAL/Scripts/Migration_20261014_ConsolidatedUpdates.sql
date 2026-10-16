@@ -273,8 +273,10 @@ GO
 CREATE OR ALTER PROCEDURE sp_RegisterStudent
     @FullName NVARCHAR(100),
     @Email NVARCHAR(100),
-    @Mobile NVARCHAR(20),
+    @Mobile NVARCHAR(20) = NULL,
     @PasswordHash NVARCHAR(255),
+    @ParentName NVARCHAR(100) = NULL,
+    @ParentMobile NVARCHAR(20) = NULL,
     @Gender NVARCHAR(10) = NULL,
     @DateOfBirth DATE = NULL,
     @Address NVARCHAR(255) = NULL
@@ -290,8 +292,8 @@ BEGIN
         RETURN;
     END
 
-    -- Check if mobile exists
-    IF EXISTS (SELECT 1 FROM Users WHERE Mobile = LTRIM(RTRIM(@Mobile)))
+    -- Check if mobile exists (if provided)
+    IF @Mobile IS NOT NULL AND LTRIM(RTRIM(@Mobile)) <> '' AND EXISTS (SELECT 1 FROM Users WHERE Mobile = LTRIM(RTRIM(@Mobile)))
     BEGIN
         SELECT -2 AS UserId; -- Mobile already exists
         RETURN;
@@ -301,32 +303,32 @@ BEGIN
     BEGIN TRY
         -- Insert into Users (RoleId = 3 for Student, IsActive = 0 for pending approval)
         INSERT INTO Users (FullName, Email, Mobile, PasswordHash, RoleId, IsActive, CreatedAt)
-        VALUES (@FullName, LOWER(LTRIM(RTRIM(@Email))), LTRIM(RTRIM(@Mobile)), @PasswordHash, 3, 0, GETDATE());
+        VALUES (LTRIM(RTRIM(@FullName)), LOWER(LTRIM(RTRIM(@Email))), NULLIF(LTRIM(RTRIM(@Mobile)), ''), @PasswordHash, 3, 0, GETDATE());
 
         DECLARE @NewUserId INT = SCOPE_IDENTITY();
 
         -- Split FullName into FirstName and LastName
         DECLARE @FirstName NVARCHAR(50);
         DECLARE @LastName NVARCHAR(50);
-        DECLARE @SpaceIndex INT = CHARINDEX(' ', @FullName);
+        DECLARE @SpaceIndex INT = CHARINDEX(' ', LTRIM(RTRIM(@FullName)));
 
         IF @SpaceIndex > 0
         BEGIN
-            SET @FirstName = SUBSTRING(@FullName, 1, @SpaceIndex - 1);
-            SET @LastName = SUBSTRING(@FullName, @SpaceIndex + 1, LEN(@FullName));
+            SET @FirstName = SUBSTRING(LTRIM(RTRIM(@FullName)), 1, @SpaceIndex - 1);
+            SET @LastName = SUBSTRING(LTRIM(RTRIM(@FullName)), @SpaceIndex + 1, 50);
         END
         ELSE
         BEGIN
-            SET @FirstName = @FullName;
-            SET @LastName = '';
+            SET @FirstName = LTRIM(RTRIM(@FullName));
+            SET @LastName = '-';
         END
 
-        -- Generate Admission No (e.g. ADM-YYYY-USERID)
-        DECLARE @AdmissionNo NVARCHAR(50) = 'ADM-' + CAST(YEAR(GETDATE()) AS NVARCHAR(4)) + '-' + RIGHT('0000' + CAST(@NewUserId AS NVARCHAR(10)), 4);
+        -- Generate Admission No (e.g. STU2026-0001)
+        DECLARE @AdmissionNo NVARCHAR(50) = 'STU' + CAST(YEAR(GETDATE()) AS NVARCHAR(4)) + '-' + RIGHT('0000' + CAST(@NewUserId AS NVARCHAR(10)), 4);
 
         -- Insert into Students
-        INSERT INTO Students (UserId, AdmissionNo, FirstName, LastName, Gender, DateOfBirth, Mobile, Email, Address, IsActive, CreatedAt)
-        VALUES (@NewUserId, @AdmissionNo, @FirstName, @LastName, @Gender, @DateOfBirth, @Mobile, @Email, @Address, 0, GETDATE());
+        INSERT INTO Students (UserId, AdmissionNo, FirstName, LastName, Gender, DateOfBirth, Mobile, Email, Address, ParentName, ParentMobile, AdmissionDate, IsActive, CreatedAt)
+        VALUES (@NewUserId, @AdmissionNo, @FirstName, @LastName, @Gender, @DateOfBirth, NULLIF(LTRIM(RTRIM(@Mobile)), ''), LOWER(LTRIM(RTRIM(@Email))), @Address, NULLIF(LTRIM(RTRIM(@ParentName)), ''), NULLIF(LTRIM(RTRIM(@ParentMobile)), ''), CAST(GETDATE() AS DATE), 0, GETDATE());
 
         COMMIT TRANSACTION;
         SELECT @NewUserId AS UserId;
@@ -342,9 +344,10 @@ GO
 CREATE OR ALTER PROCEDURE sp_RegisterTeacher
     @FullName NVARCHAR(100),
     @Email NVARCHAR(100),
-    @Mobile NVARCHAR(20),
+    @Mobile NVARCHAR(20) = NULL,
     @PasswordHash NVARCHAR(255),
-    @Qualification NVARCHAR(100) = NULL
+    @Qualification NVARCHAR(100) = NULL,
+    @SubjectSpecialization NVARCHAR(100) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -357,8 +360,8 @@ BEGIN
         RETURN;
     END
 
-    -- Check if mobile exists
-    IF EXISTS (SELECT 1 FROM Users WHERE Mobile = LTRIM(RTRIM(@Mobile)))
+    -- Check if mobile exists (if provided)
+    IF @Mobile IS NOT NULL AND LTRIM(RTRIM(@Mobile)) <> '' AND EXISTS (SELECT 1 FROM Users WHERE Mobile = LTRIM(RTRIM(@Mobile)))
     BEGIN
         SELECT -2 AS UserId; -- Mobile exists
         RETURN;
@@ -368,32 +371,42 @@ BEGIN
     BEGIN TRY
         -- Insert into Users (RoleId = 2 for Teacher, IsActive = 0 for pending approval)
         INSERT INTO Users (FullName, Email, Mobile, PasswordHash, RoleId, IsActive, CreatedAt)
-        VALUES (@FullName, LOWER(LTRIM(RTRIM(@Email))), LTRIM(RTRIM(@Mobile)), @PasswordHash, 2, 0, GETDATE());
+        VALUES (LTRIM(RTRIM(@FullName)), LOWER(LTRIM(RTRIM(@Email))), NULLIF(LTRIM(RTRIM(@Mobile)), ''), @PasswordHash, 2, 0, GETDATE());
 
         DECLARE @NewUserId INT = SCOPE_IDENTITY();
 
         -- Split FullName
         DECLARE @FirstName NVARCHAR(50);
         DECLARE @LastName NVARCHAR(50);
-        DECLARE @SpaceIndex INT = CHARINDEX(' ', @FullName);
+        DECLARE @SpaceIndex INT = CHARINDEX(' ', LTRIM(RTRIM(@FullName)));
 
         IF @SpaceIndex > 0
         BEGIN
-            SET @FirstName = SUBSTRING(@FullName, 1, @SpaceIndex - 1);
-            SET @LastName = SUBSTRING(@FullName, @SpaceIndex + 1, LEN(@FullName));
+            SET @FirstName = SUBSTRING(LTRIM(RTRIM(@FullName)), 1, @SpaceIndex - 1);
+            SET @LastName = SUBSTRING(LTRIM(RTRIM(@FullName)), @SpaceIndex + 1, 50);
         END
         ELSE
         BEGIN
-            SET @FirstName = @FullName;
-            SET @LastName = '';
+            SET @FirstName = LTRIM(RTRIM(@FullName));
+            SET @LastName = '-';
         END
 
         -- Generate Employee Code
-        DECLARE @EmployeeCode NVARCHAR(50) = 'TCH-' + CAST(YEAR(GETDATE()) AS NVARCHAR(4)) + '-' + RIGHT('0000' + CAST(@NewUserId AS NVARCHAR(10)), 4);
+        DECLARE @EmployeeCode NVARCHAR(50) = 'TCH' + CAST(YEAR(GETDATE()) AS NVARCHAR(4)) + '-' + RIGHT('0000' + CAST(@NewUserId AS NVARCHAR(10)), 4);
+
+        -- Combine qualification and specialization if both exist
+        DECLARE @FullQualification NVARCHAR(200) = NULLIF(LTRIM(RTRIM(@Qualification)), '');
+        IF @SubjectSpecialization IS NOT NULL AND LTRIM(RTRIM(@SubjectSpecialization)) <> ''
+        BEGIN
+            IF @FullQualification IS NOT NULL
+                SET @FullQualification = @FullQualification + ' (' + LTRIM(RTRIM(@SubjectSpecialization)) + ')';
+            ELSE
+                SET @FullQualification = LTRIM(RTRIM(@SubjectSpecialization));
+        END
 
         -- Insert into Teachers
-        INSERT INTO Teachers (UserId, EmployeeCode, FirstName, LastName, Mobile, Email, Qualification, IsActive, CreatedAt)
-        VALUES (@NewUserId, @EmployeeCode, @FirstName, @LastName, @Mobile, @Email, @Qualification, 0, GETDATE());
+        INSERT INTO Teachers (UserId, EmployeeCode, FirstName, LastName, Mobile, Email, Qualification, JoiningDate, IsActive, CreatedAt)
+        VALUES (@NewUserId, @EmployeeCode, @FirstName, @LastName, NULLIF(LTRIM(RTRIM(@Mobile)), ''), LOWER(LTRIM(RTRIM(@Email))), @FullQualification, CAST(GETDATE() AS DATE), 0, GETDATE());
 
         COMMIT TRANSACTION;
         SELECT @NewUserId AS UserId;

@@ -79,5 +79,7 @@ namespace CMS_DAL.Repositories.Interfaces
         Task<int> UpdateBatchAsync(Batch batch);
         Task<int> DeleteBatchAsync(int batchId);
         Task<(int TotalBatches, int ActiveBatches, int InactiveBatches, int TotalEnrolled, int CoursesWithBatches)> GetBatchStatsAsync();
+        Task<IEnumerable<BatchFacultyAssignment>> GetBatchFacultyAssignmentsAsync(int batchId);
+        Task<bool> SaveBatchFacultyAssignmentsAsync(int batchId, IEnumerable<BatchFacultyAssignmentSaveRequest> assignments);
     }
 }

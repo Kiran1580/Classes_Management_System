@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Application Status</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f1f5f9;
+            margin: 0;
+            padding: 24px 12px;
+            color: #1e293b;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08);
+            border: 1px solid #e2e8f0;
+        }
+        .header {
+            background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+            color: #ffffff;
+            padding: 30px 24px;
+            text-align: center;
+        }
+        .header-badge {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border: 1px solid rgba(252, 165, 165, 0.3);
+            font-size: 11px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+        .header h2 {
+            margin: 0 0 6px 0;
+            font-size: 22px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+        .header p {
+            margin: 0;
+            font-size: 13.5px;
+            color: rgba(255, 255, 255, 0.75);
+        }
+        .content {
+            padding: 30px 28px;
+        }
+        .greeting {
+            font-size: 17px;
+            font-weight: 600;
+            color: #0f172a;
+            margin-top: 0;
+            margin-bottom: 12px;
+        }
+        .message {
+            font-size: 14px;
+            color: #475569;
+            line-height: 1.6;
+            margin-bottom: 22px;
+        }
+        .notice-box {
+            background: #fef2f2;
+            border: 1.5px solid #fecaca;
+            border-radius: 10px;
+            padding: 18px 20px;
+            margin-bottom: 24px;
+        }
+        .notice-title {
+            color: #b91c1c;
+            font-weight: 700;
+            font-size: 14.5px;
+            margin-bottom: 6px;
+        }
+        .notice-desc {
+            color: #991b1b;
+            font-size: 13.5px;
+            line-height: 1.5;
+            margin: 0;
+        }
+        .details-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .details-table tr {
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .details-table tr:last-child {
+            border-bottom: none;
+        }
+        .details-table td {
+            padding: 11px 16px;
+            font-size: 13.5px;
+        }
+        .col-lbl {
+            color: #64748b;
+            font-weight: 600;
+            width: 38%;
+        }
+        .col-val {
+            color: #0f172a;
+            font-weight: 500;
+            width: 62%;
+        }
+        .help-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 18px 20px;
+            margin-bottom: 20px;
+            font-size: 13.5px;
+            color: #475569;
+            line-height: 1.6;
+        }
+        .footer {
+            background: #f8fafc;
+            padding: 18px 24px;
+            text-align: center;
+            font-size: 12px;
+            color: #94a3b8;
+            border-top: 1px solid #e2e8f0;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <span class="header-badge">Application Status</span>
+            <h2>Classes Management System</h2>
+            <p>Registration Application Review Update</p>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <div class="greeting">Dear {{FullName}},</div>
+            <div class="message">
+                Thank you for your interest in joining Classes Management System as a <strong>{{RoleName}}</strong>. We appreciate the time and effort you took to submit your registration details.
+            </div>
+
+            <!-- Status Notice -->
+            <div class="notice-box">
+                <div class="notice-title">Status: Application Not Approved</div>
+                <p class="notice-desc">
+                    After reviewing your application, we regret to inform you that your registration could not be accepted at this time.
+                </p>
+            </div>
+
+            <!-- Details -->
+            <div class="details-card">
+                <table class="details-table">
+                    <tr>
+                        <td class="col-lbl">Applicant Name</td>
+                        <td class="col-val">{{FullName}}</td>
+                    </tr>
+                    <tr>
+                        <td class="col-lbl">Applied Role</td>
+                        <td class="col-val">{{RoleName}}</td>
+                    </tr>
+                    <tr>
+                        <td class="col-lbl">Remarks / Reason</td>
+                        <td class="col-val">{{Reason}}</td>
+                    </tr>
+                    <tr>
+                        <td class="col-lbl">Decision Date</td>
+                        <td class="col-val">{{DecisionDate}}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Help Contact -->
+            <div class="help-box">
+                <strong>Need clarification or want to re-apply?</strong><br>
+                If you believe there was an error with your documentation or if you would like more details regarding this decision, please feel free to visit our administration office or reply to this communication.
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            Classes Management System &bull; Administration Desk<br>
+            This is an automated administrative notification.
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faculty Registration Application Received</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f1f5f9;
+            margin: 0;
+            padding: 24px 12px;
+            color: #1e293b;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08);
+            border: 1px solid #e2e8f0;
+        }
+        .header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+            color: #ffffff;
+            padding: 30px 24px;
+            text-align: center;
+        }
+        .header-badge {
+            background: rgba(99, 102, 241, 0.25);
+            color: #a5b4fc;
+            border: 1px solid rgba(165, 180, 252, 0.3);
+            font-size: 11px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+        .header h2 {
+            margin: 0 0 6px 0;
+            font-size: 22px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+        .header p {
+            margin: 0;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.75);
+        }
+        .content {
+            padding: 30px 28px;
+        }
+        .greeting {
+            font-size: 16px;
+            font-weight: 600;
+            color: #0f172a;
+            margin-top: 0;
+            margin-bottom: 12px;
+        }
+        .message {
+            font-size: 14px;
+            color: #475569;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .status-card {
+            background: #eef2ff;
+            border: 1.5px solid #c7d2fe;
+            border-radius: 10px;
+            padding: 18px 20px;
+            margin-bottom: 24px;
+        }
+        .status-title {
+            color: #3730a3;
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 6px;
+        }
+        .status-desc {
+            color: #4338ca;
+            font-size: 13px;
+            line-height: 1.5;
+            margin: 0;
+        }
+        .details-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+        .details-header {
+            background: #f1f5f9;
+            padding: 10px 16px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .details-table tr {
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .details-table tr:last-child {
+            border-bottom: none;
+        }
+        .details-table td {
+            padding: 11px 16px;
+            font-size: 13.5px;
+        }
+        .col-lbl {
+            color: #64748b;
+            font-weight: 600;
+            width: 40%;
+        }
+        .col-val {
+            color: #0f172a;
+            font-weight: 500;
+            width: 60%;
+        }
+        .steps-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        .steps-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #334155;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 12px;
+        }
+        .step-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 10px;
+            font-size: 13.5px;
+            color: #475569;
+        }
+        .step-item:last-child {
+            margin-bottom: 0;
+        }
+        .step-num {
+            background: #e2e8f0;
+            color: #1e293b;
+            font-weight: 700;
+            font-size: 11px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .action-area {
+            text-align: center;
+            margin: 25px 0 10px 0;
+        }
+        .btn-portal {
+            display: inline-block;
+            background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+            color: #ffffff !important;
+            text-decoration: none;
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+        }
+        .footer {
+            background: #f8fafc;
+            padding: 18px 24px;
+            text-align: center;
+            font-size: 12px;
+            color: #94a3b8;
+            border-top: 1px solid #e2e8f0;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <span class="header-badge">Faculty Application</span>
+            <h2>Welcome to Classes Management System</h2>
+            <p>Your faculty registration application has been received</p>
+        </div>
+
+        <!-- Body Content -->
+        <div class="content">
+            <div class="greeting">Dear {{TeacherName}},</div>
+            <div class="message">
+                Thank you for applying to join our faculty team. Your registration application has been successfully submitted and is currently pending verification by the administration team.
+            </div>
+
+            <!-- Status Card -->
+            <div class="status-card">
+                <div class="status-title">⏳ Status: Pending Administrator Review</div>
+                <p class="status-desc">
+                    Your profile and qualifications are being reviewed. Once approved by the administrator, your faculty account will be activated and you will be able to access your teacher portal.
+                </p>
+            </div>
+
+            <!-- Application Summary -->
+            <div class="details-box">
+                <div class="details-header">Application Summary</div>
+                <table class="details-table">
+                    <tr>
+                        <td class="col-lbl">Faculty Name</td>
+                        <td class="col-val">{{TeacherName}}</td>
+                    </tr>
+                    <tr>
+                        <td class="col-lbl">Registered Email</td>
+                        <td class="col-val">{{TeacherEmail}}</td>
+                    </tr>
+                    <tr>
+                        <td class="col-lbl">Qualification</td>
+                        <td class="col-val">{{Qualification}}</td>
+                    </tr>
+                    <tr>
+                        <td class="col-lbl">Specialization</td>
+                        <td class="col-val">{{SubjectSpecialization}}</td>
+                    </tr>
+                    <tr>
+                        <td class="col-lbl">Submission Date</td>
+                        <td class="col-val">{{RegistrationDate}}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- What's Next Steps -->
+            <div class="steps-box">
+                <div class="steps-title">What happens next?</div>
+                <div class="step-item">
+                    <span class="step-num">1</span>
+                    <span><strong>Administrator Review:</strong> The admin verifies your credentials and assigns initial teaching subjects/batches.</span>
+                </div>
+                <div class="step-item">
+                    <span class="step-num">2</span>
+                    <span><strong>Account Activation:</strong> Once approved, your account is activated and you will be notified.</span>
+                </div>
+                <div class="step-item">
+                    <span class="step-num">3</span>
+                    <span><strong>Portal Access:</strong> Log in with your registered email and password to manage attendance, exams, batches, and student marks.</span>
+                </div>
+            </div>
+
+            <!-- Button Action -->
+            <div class="action-area">
+                <a href="{{PortalUrl}}" class="btn-portal">Go to Login Portal</a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            This is an automated acknowledgment from Classes Management System.<br>
+            If you did not register for this account, please contact the administration office immediately.
+        </div>
+    </div>
+</body>
+</html>

@@ -34,5 +34,7 @@ namespace CMS_DAL.Repositories.Interfaces
         Task<string> GetNextAdmissionNumberAsync(string prefix = "ADM");
 
         Task<IEnumerable<Batch>> GetBatchesByCourseAsync(int courseId);
+
+        Task<(Student? StudentInfo, IEnumerable<StudentEnrolledBatch> Batches, IEnumerable<StudentBatchSubject> Subjects)> GetStudentCoursesAndBatchesAsync(int? userId = null, int? studentId = null);
     }
 }

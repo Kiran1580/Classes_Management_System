@@ -1,0 +1,295 @@
+@model CMS_BAL.ViewModels.StudentCoursesAndBatchesViewModel
+@{
+    ViewData["Title"] = "My Courses & Batches";
+}
+
+<style>
+    .course-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 1rem;
+        background: #ffffff;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        overflow: hidden;
+    }
+    .course-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+    }
+    .card-banner {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #0369a1 100%);
+        color: white;
+        padding: 1.5rem 1.75rem;
+    }
+    .info-pill {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.65rem;
+        padding: 0.65rem 1rem;
+        font-size: 0.85rem;
+    }
+    .teacher-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.75rem;
+        padding: 1rem 1.15rem;
+        transition: background 0.15s ease;
+    }
+    .teacher-card:hover {
+        background: #f1f5f9;
+    }
+    .avatar-sm {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.9rem;
+    }
+</style>
+
+<!-- Top Header Banner -->
+<div class="card border-0 shadow-sm rounded-4 mb-4" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: white;">
+    <div class="card-body p-4">
+        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
+            <div>
+                <span class="badge bg-white text-primary px-3 py-1 rounded-pill fw-semibold mb-2">
+                    <i class="bi bi-book-half me-1"></i> Academic Desk
+                </span>
+                <h3 class="fw-bold mb-1 text-white">My Enrolled Courses &amp; Batches 🎒</h3>
+                <p class="text-white text-opacity-75 mb-0 small">
+                    View your assigned batch schedules, timings, classroom, faculty members, and attendance progress.
+                </p>
+            </div>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                @if (!string.IsNullOrWhiteSpace(Model.AdmissionNo))
+                {
+                    <span class="badge bg-white text-dark px-3 py-2 rounded-3 small shadow-sm fw-semibold">
+                        <i class="bi bi-person-badge text-primary me-1"></i> Roll/Adm: <span class="text-primary fw-bold">@Model.AdmissionNo</span>
+                    </span>
+                }
+                <span class="badge bg-warning text-dark px-3 py-2 rounded-3 fw-bold shadow-sm">
+                    <i class="bi bi-collection-play me-1"></i> @Model.Batches.Count Enrolled Batch@(Model.Batches.Count != 1 ? "es" : "")
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (!Model.HasBatches)
+{
+    <!-- Empty State: Fresh Admission with Batch Allocation in Progress -->
+    <div class="card border-0 shadow-sm rounded-4 text-center p-5 mb-4" style="background: #ffffff;">
+        <div class="py-4">
+            <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center mb-4" style="width: 80px; height: 80px; font-size: 2.5rem;">
+                <i class="bi bi-hourglass-split"></i>
+            </div>
+            <h4 class="fw-bold text-dark mb-2">Admission Confirmed &bull; Batch Allocation in Progress</h4>
+            <p class="text-secondary mx-auto mb-4" style="max-width: 580px; line-height: 1.6;">
+                Welcome, <strong>@(string.IsNullOrWhiteSpace(Model.StudentFullName) ? "Student" : Model.StudentFullName)</strong>! Your registration has been verified and approved. The administration is currently scheduling your course batch, classroom, and faculty allotment. Once assigned, your complete timetable will appear here.
+            </p>
+
+            <div class="card border-0 bg-light rounded-3 p-4 mx-auto mb-4 text-start" style="max-width: 540px;">
+                <h6 class="fw-bold text-dark mb-3"><i class="bi bi-check2-circle text-success me-2"></i>What to expect next:</h6>
+                <div class="d-flex align-items-start gap-2 mb-2 text-secondary small">
+                    <span class="badge bg-primary rounded-circle" style="width: 20px; height: 20px; padding: 2px;">1</span>
+                    <span>Admin assigns your preferred stream and academic batch timing.</span>
+                </div>
+                <div class="d-flex align-items-start gap-2 mb-2 text-secondary small">
+                    <span class="badge bg-primary rounded-circle" style="width: 20px; height: 20px; padding: 2px;">2</span>
+                    <span>Classroom, daily lecture hours, and assigned teachers will be updated automatically.</span>
+                </div>
+                <div class="d-flex align-items-start gap-2 text-secondary small">
+                    <span class="badge bg-primary rounded-circle" style="width: 20px; height: 20px; padding: 2px;">3</span>
+                    <span>You will receive an update in the portal once your classes commence.</span>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-center gap-2">
+                <a asp-area="" asp-controller="Dashboard" asp-action="Index" class="btn btn-primary fw-semibold px-4 py-2 rounded-3 shadow-sm">
+                    <i class="bi bi-speedometer2 me-1"></i> Go to Dashboard
+                </a>
+                <a asp-area="" asp-controller="Profile" asp-action="Index" class="btn btn-outline-secondary fw-semibold px-4 py-2 rounded-3">
+                    <i class="bi bi-person-lines-fill me-1"></i> View My Profile
+                </a>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <!-- Enrolled Batches Cards Grid -->
+    <div class="d-flex flex-column gap-4 mb-4">
+        @foreach (var batch in Model.Batches)
+        {
+            <div class="course-card">
+                <!-- Card Header -->
+                <div class="card-banner d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                            <span class="badge bg-primary text-white px-2.5 py-1 rounded-pill small fw-semibold">
+                                <i class="bi bi-bookmark-fill me-1"></i> @batch.CourseName
+                            </span>
+                            @if (!string.IsNullOrWhiteSpace(batch.CourseDuration))
+                            {
+                                <span class="badge rounded-pill px-2.5 py-1 small text-white" style="background: rgba(255, 255, 255, 0.22); border: 1px solid rgba(255, 255, 255, 0.35);">
+                                    <i class="bi bi-clock me-1"></i> @batch.CourseDuration
+                                </span>
+                            }
+                            <span class="badge @(string.Equals(batch.BatchStatus, "Active", StringComparison.OrdinalIgnoreCase) ? "bg-success" : "bg-secondary") rounded-pill px-2.5 py-1 small">
+                                @batch.BatchStatus
+                            </span>
+                        </div>
+                        <h4 class="fw-bold mb-0 text-white">@batch.BatchName</h4>
+                        <div class="text-light text-opacity-75 small mt-1">
+                            Academic Year: <strong>@batch.AcademicYearName</strong> &bull; Enrolled on @batch.EnrollmentDate.ToString("dd MMM yyyy")
+                        </div>
+                    </div>
+
+                    <!-- Attendance Score Badge -->
+                    <div class="rounded-3 p-2 px-3 text-center" style="background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.28);">
+                        <div class="small text-white text-opacity-75" style="font-size: 0.75rem;">Batch Attendance</div>
+                        <div class="fs-4 fw-bold text-white">@batch.AttendancePercentage%</div>
+                        <small class="text-white text-opacity-75" style="font-size: 0.72rem;">@batch.AttendedSessions / @batch.TotalSessions sessions</small>
+                    </div>
+                </div>
+
+                <!-- Card Body -->
+                <div class="p-4">
+                    <!-- Key Information Pills Grid -->
+                    <div class="row g-2 mb-4">
+                        <!-- Timing -->
+                        <div class="col-6 col-md-3">
+                            <div class="info-pill d-flex align-items-center gap-2">
+                                <div class="text-primary fs-5"><i class="bi bi-alarm"></i></div>
+                                <div>
+                                    <span class="d-block text-secondary small" style="font-size: 0.72rem;">Class Timing</span>
+                                    <strong class="text-dark">@(string.IsNullOrWhiteSpace(batch.StartTimeStr) ? "Flexible" : $"{batch.StartTimeStr} - {batch.EndTimeStr}")</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Classroom / Room -->
+                        <div class="col-6 col-md-3">
+                            <div class="info-pill d-flex align-items-center gap-2">
+                                <div class="text-info fs-5"><i class="bi bi-door-closed"></i></div>
+                                <div>
+                                    <span class="d-block text-secondary small" style="font-size: 0.72rem;">Classroom</span>
+                                    <strong class="text-dark">@(string.IsNullOrWhiteSpace(batch.RoomNo) ? "Main Hall" : $"Room {batch.RoomNo}")</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Schedule Dates -->
+                        <div class="col-6 col-md-3">
+                            <div class="info-pill d-flex align-items-center gap-2">
+                                <div class="text-warning fs-5"><i class="bi bi-calendar3"></i></div>
+                                <div>
+                                    <span class="d-block text-secondary small" style="font-size: 0.72rem;">Batch Duration</span>
+                                    <strong class="text-dark">
+                                        @(batch.BatchStartDate?.ToString("dd MMM yyyy") ?? "Immediate") 
+                                        @(batch.BatchEndDate.HasValue ? $"to {batch.BatchEndDate.Value:dd MMM}" : "")
+                                    </strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Capacity / Batchmates -->
+                        <div class="col-6 col-md-3">
+                            <div class="info-pill d-flex align-items-center gap-2">
+                                <div class="text-success fs-5"><i class="bi bi-people-fill"></i></div>
+                                <div>
+                                    <span class="d-block text-secondary small" style="font-size: 0.72rem;">Learners</span>
+                                    <strong class="text-dark">@batch.EnrolledCount @(batch.Capacity > 0 ? $"/ {batch.Capacity}" : "") Enrolled</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Course Description (If available) -->
+                    @if (!string.IsNullOrWhiteSpace(batch.CourseDescription))
+                    {
+                        <div class="bg-light bg-opacity-75 rounded-3 p-3 mb-4">
+                            <span class="text-secondary small fw-semibold text-uppercase d-block mb-1" style="font-size: 0.72rem;">About this Program</span>
+                            <p class="text-dark small mb-0" style="line-height: 1.6;">@batch.CourseDescription</p>
+                        </div>
+                    }
+
+                    <!-- Subjects & Assigned Faculty Staff Section -->
+                    <h6 class="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+                        <i class="bi bi-person-workspace text-primary"></i> Subjects &amp; Assigned Faculty
+                        <span class="badge bg-secondary-subtle text-secondary rounded-pill small">@batch.Subjects.Count</span>
+                    </h6>
+
+                    @if (batch.Subjects.Count == 0)
+                    {
+                        <div class="text-muted small p-3 bg-light rounded-3">
+                            <i class="bi bi-info-circle me-1"></i> Curriculum subjects and teacher assignments are currently being scheduled for this batch.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="row g-3">
+                            @foreach (var sub in batch.Subjects)
+                            {
+                                string initial = !string.IsNullOrWhiteSpace(sub.TeacherName) ? sub.TeacherName[0].ToString().ToUpper() : "T";
+                                <div class="col-12 col-md-6">
+                                    <div class="teacher-card h-100 d-flex flex-column justify-content-between">
+                                        <div>
+                                            <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
+                                                <div>
+                                                    <span class="badge bg-primary-subtle text-primary fw-semibold px-2 py-0.5 rounded small" style="font-size: 0.72rem;">
+                                                        Subject
+                                                    </span>
+                                                    <h6 class="fw-bold text-dark mt-1 mb-0">@sub.SubjectName</h6>
+                                                </div>
+                                            </div>
+
+                                            @if (!string.IsNullOrWhiteSpace(sub.SubjectDescription))
+                                            {
+                                                <p class="text-secondary small mb-3" style="font-size: 0.8rem; line-height: 1.4;">
+                                                    @sub.SubjectDescription
+                                                </p>
+                                            }
+                                        </div>
+
+                                        <!-- Teacher Details Row -->
+                                        <div class="d-flex align-items-center gap-3 pt-2 border-top">
+                                            <div class="avatar-sm bg-primary bg-opacity-10 text-primary">
+                                                @initial
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <div class="fw-semibold text-dark small">@sub.TeacherName</div>
+                                                <div class="text-muted" style="font-size: 0.75rem;">
+                                                    @(string.IsNullOrWhiteSpace(sub.TeacherQualification) ? "Faculty Member" : sub.TeacherQualification)
+                                                </div>
+                                            </div>
+                                            @if (!string.IsNullOrWhiteSpace(sub.TeacherEmail))
+                                            {
+                                                <a href="mailto:@sub.TeacherEmail" class="btn btn-sm btn-light border rounded-circle text-primary" title="Email Teacher" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                                                    <i class="bi bi-envelope"></i>
+                                                </a>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+
+                    <!-- Bottom Action Links -->
+                    <div class="d-flex align-items-center justify-content-between pt-3 mt-4 border-top">
+                        <div class="text-secondary small">
+                            <i class="bi bi-shield-check text-success me-1"></i> Active Official Enrollment
+                        </div>
+                        <a asp-area="" asp-controller="Attendance" asp-action="MyAttendance" class="btn btn-sm btn-outline-primary fw-semibold rounded-2 px-3">
+                            <i class="bi bi-calendar-event me-1"></i> View Attendance Records <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

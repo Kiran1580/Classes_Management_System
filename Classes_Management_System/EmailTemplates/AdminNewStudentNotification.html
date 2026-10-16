@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Student Registration Notification</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f1f5f9;
+            margin: 0;
+            padding: 24px 12px;
+            color: #1e293b;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08);
+            border: 1px solid #e2e8f0;
+        }
+        .header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #172554 100%);
+            color: #ffffff;
+            padding: 30px 24px;
+            text-align: center;
+        }
+        .header-badge {
+            background: rgba(59, 130, 246, 0.25);
+            color: #93c5fd;
+            border: 1px solid rgba(147, 197, 253, 0.3);
+            font-size: 11px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+        .header h2 {
+            margin: 0 0 6px 0;
+            font-size: 22px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+        .header p {
+            margin: 0;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.75);
+        }
+        .content {
+            padding: 30px 28px;
+        }
+        .greeting {
+            font-size: 16px;
+            font-weight: 600;
+            color: #0f172a;
+            margin-top: 0;
+            margin-bottom: 8px;
+        }
+        .message {
+            font-size: 14px;
+            color: #475569;
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+        .details-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+        .table-row {
+            display: flex;
+            padding: 12px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 14px;
+        }
+        .table-row:last-child {
+            border-bottom: none;
+        }
+        .col-label {
+            width: 38%;
+            color: #64748b;
+            font-weight: 600;
+        }
+        .col-value {
+            width: 62%;
+            color: #0f172a;
+            font-weight: 500;
+            word-break: break-word;
+        }
+        .action-area {
+            text-align: center;
+            margin: 30px 0 10px 0;
+        }
+        .btn-action {
+            display: inline-block;
+            background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+            color: #ffffff !important;
+            text-decoration: none;
+            padding: 13px 30px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
+        }
+        .footer {
+            background: #f8fafc;
+            padding: 18px 24px;
+            text-align: center;
+            font-size: 12px;
+            color: #94a3b8;
+            border-top: 1px solid #e2e8f0;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <span class="header-badge">New Admission Request</span>
+            <h2>Online Student Registration</h2>
+            <p>Verification &amp; approval required in portal</p>
+        </div>
+
+        <!-- Body Content -->
+        <div class="content">
+            <div class="greeting">Hello Administrator,</div>
+            <div class="message">
+                A new student has submitted an online registration request on the portal. Please review the applicant details below and verify their enrollment:
+            </div>
+
+            <!-- Details Card -->
+            <div class="details-box">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 12px 16px; color: #64748b; font-weight: 600; width: 38%; font-size: 14px;">Student Full Name</td>
+                        <td style="padding: 12px 16px; color: #0f172a; font-weight: 700; width: 62%; font-size: 14px;">{{StudentName}}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 12px 16px; color: #64748b; font-weight: 600; font-size: 14px;">Email Address</td>
+                        <td style="padding: 12px 16px; color: #0f172a; font-weight: 500; font-size: 14px;">{{StudentEmail}}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 12px 16px; color: #64748b; font-weight: 600; font-size: 14px;">Mobile Number</td>
+                        <td style="padding: 12px 16px; color: #0f172a; font-weight: 500; font-size: 14px;">{{StudentMobile}}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 12px 16px; color: #64748b; font-weight: 600; font-size: 14px;">Parent / Guardian</td>
+                        <td style="padding: 12px 16px; color: #0f172a; font-weight: 500; font-size: 14px;">{{ParentName}}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 12px 16px; color: #64748b; font-weight: 600; font-size: 14px;">Parent Mobile</td>
+                        <td style="padding: 12px 16px; color: #0f172a; font-weight: 500; font-size: 14px;">{{ParentMobile}}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px 16px; color: #64748b; font-weight: 600; font-size: 14px;">Registration Date</td>
+                        <td style="padding: 12px 16px; color: #0f172a; font-weight: 500; font-size: 14px;">{{RegistrationDate}}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Call to Action Button -->
+            <div class="action-area">
+                <a href="{{ApprovalUrl}}" class="btn-action">
+                    Review &amp; Approve in Admin Portal
+                </a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <strong>Classes Management System</strong><br>
+            This is an automated system notification. Please do not reply directly to this email.
+        </div>
+    </div>
+</body>
+</html>

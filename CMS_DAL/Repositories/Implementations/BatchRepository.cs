@@ -151,5 +151,56 @@ namespace CMS_DAL.Repositories.Implementations
                 );
             }
         }
+
+        public async Task<IEnumerable<BatchFacultyAssignment>> GetBatchFacultyAssignmentsAsync(int batchId)
+        {
+            using (IDbConnection con = connection())
+            {
+                var parms = new DynamicParameters();
+                parms.Add("@BatchId", batchId);
+
+                return await con.QueryAsync<BatchFacultyAssignment>(
+                    "sp_GetBatchFacultyAssignments",
+                    parms,
+                    commandType: CommandType.StoredProcedure);
+            }
+        }
+
+        public async Task<bool> SaveBatchFacultyAssignmentsAsync(int batchId, IEnumerable<BatchFacultyAssignmentSaveRequest> assignments)
+        {
+            using (IDbConnection con = connection())
+            {
+                if (con.State != ConnectionState.Open)
+                    con.Open();
+
+                using (var tran = con.BeginTransaction())
+                {
+                    try
+                    {
+                        foreach (var item in assignments)
+                        {
+                            var parms = new DynamicParameters();
+                            parms.Add("@BatchId", batchId);
+                            parms.Add("@SubjectId", item.SubjectId);
+                            parms.Add("@TeacherId", item.TeacherId.HasValue && item.TeacherId.Value > 0 ? item.TeacherId.Value : (int?)null);
+
+                            await con.ExecuteAsync(
+                                "sp_SaveBatchFacultyAssignment",
+                                parms,
+                                transaction: tran,
+                                commandType: CommandType.StoredProcedure);
+                        }
+
+                        tran.Commit();
+                        return true;
+                    }
+                    catch
+                    {
+                        tran.Rollback();
+                        throw;
+                    }
+                }
+            }
+        }
     }
 }

@@ -11,10 +11,12 @@ namespace Classes_Management_System.Controllers
     public class AccountController : Controller
     {
         private readonly IAuthService _authService;
+        private readonly IEmailService _emailService;
 
-        public AccountController(IAuthService authService)
+        public AccountController(IAuthService authService, IEmailService emailService)
         {
             _authService = authService;
+            _emailService = emailService;
         }
 
         [HttpGet]
@@ -113,6 +115,50 @@ namespace Classes_Management_System.Controllers
                 return View(model);
             }
 
+            // Capture live domain/host dynamically before running in background
+            string baseUrl = $"{Request.Scheme}://{Request.Host}";
+
+            // Send notification emails asynchronously in background (won't block UI / fail registration)
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    // 1. Notify Administrator
+                    await _emailService.SendAdminNotificationAsync(
+                        subject: $"📢 New Student Registration: {model.FullName}",
+                        templateName: "AdminNewStudentNotification",
+                        placeholders: new Dictionary<string, string>
+                        {
+                            { "StudentName", model.FullName },
+                            { "StudentEmail", model.Email },
+                            { "StudentMobile", model.Mobile ?? "—" },
+                            { "ParentName", model.ParentName ?? "—" },
+                            { "ParentMobile", model.ParentMobile ?? "—" },
+                            { "ApprovalUrl", $"{baseUrl}/UserApproval" },
+                            { "RegistrationDate", DateTime.Now.ToString("dd MMM yyyy, hh:mm tt") }
+                        },
+                        baseUrl: baseUrl);
+
+                    // 2. Acknowledge Student
+                    await _emailService.SendTemplatedEmailAsync(
+                        toEmail: model.Email,
+                        subject: "Welcome! Your Registration Application Has Been Received",
+                        templateName: "StudentRegistrationAcknowledgment",
+                        placeholders: new Dictionary<string, string>
+                        {
+                            { "StudentName", model.FullName },
+                            { "StudentEmail", model.Email },
+                            { "RegistrationDate", DateTime.Now.ToString("dd MMM yyyy") }
+                        },
+                        toName: model.FullName,
+                        baseUrl: baseUrl);
+                }
+                catch
+                {
+                    // Email logging is safely handled within EmailService
+                }
+            });
+
             TempData["SuccessMessage"] = message;
             return RedirectToAction(nameof(Login));
         }
@@ -144,6 +190,52 @@ namespace Classes_Management_System.Controllers
                 ModelState.AddModelError(string.Empty, message);
                 return View(model);
             }
+
+            // Capture live domain/host dynamically before running in background
+            string baseUrl = $"{Request.Scheme}://{Request.Host}";
+
+            // Send notification emails asynchronously in background
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    // 1. Notify Administrator
+                    await _emailService.SendAdminNotificationAsync(
+                        subject: $"🔔 New Faculty Application: {model.FullName}",
+                        templateName: "AdminNewTeacherNotification",
+                        placeholders: new Dictionary<string, string>
+                        {
+                            { "TeacherName", model.FullName },
+                            { "TeacherEmail", model.Email },
+                            { "TeacherMobile", model.Mobile ?? "—" },
+                            { "Qualification", model.Qualification ?? "—" },
+                            { "SubjectSpecialization", model.SubjectSpecialization ?? "—" },
+                            { "ApprovalUrl", $"{baseUrl}/UserApproval?role=Teacher" },
+                            { "RegistrationDate", DateTime.Now.ToString("dd MMM yyyy, hh:mm tt") }
+                        },
+                        baseUrl: baseUrl);
+
+                    // 2. Acknowledge Teacher
+                    await _emailService.SendTemplatedEmailAsync(
+                        toEmail: model.Email,
+                        subject: "Welcome! Your Faculty Registration Has Been Received",
+                        templateName: "TeacherRegistrationAcknowledgment",
+                        placeholders: new Dictionary<string, string>
+                        {
+                            { "TeacherName", model.FullName },
+                            { "TeacherEmail", model.Email },
+                            { "Qualification", model.Qualification ?? "—" },
+                            { "SubjectSpecialization", model.SubjectSpecialization ?? "—" },
+                            { "RegistrationDate", DateTime.Now.ToString("dd MMM yyyy, hh:mm tt") }
+                        },
+                        toName: model.FullName,
+                        baseUrl: baseUrl);
+                }
+                catch
+                {
+                    // Email logging is safely handled within EmailService
+                }
+            });
 
             TempData["SuccessMessage"] = message;
             return RedirectToAction(nameof(Login));

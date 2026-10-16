@@ -135,5 +135,31 @@ namespace Classes_Management_System.Controllers
             if (batch == null) return NotFound();
             return Json(batch);
         }
+
+        // ==========================================
+        // GET: /Admin/Batch/GetFacultyAssignments?batchId=x (AJAX)
+        // ==========================================
+        [HttpGet]
+        public async Task<IActionResult> GetFacultyAssignments(int batchId)
+        {
+            var data = await _batchService.GetBatchFacultyDetailsAsync(batchId);
+            if (data == null)
+                return Json(new { success = false, message = "Batch not found." });
+
+            return Json(new { success = true, data });
+        }
+
+        // ==========================================
+        // POST: /Admin/Batch/SaveFacultyAssignments (AJAX JSON)
+        // ==========================================
+        [HttpPost]
+        public async Task<IActionResult> SaveFacultyAssignments([FromBody] SaveBatchFacultyRequest request)
+        {
+            if (request == null || request.BatchId <= 0)
+                return Json(new { success = false, message = "Invalid request payload." });
+
+            var (success, message) = await _batchService.SaveBatchFacultyAssignmentsAsync(request);
+            return Json(new { success, message });
+        }
     }
 }

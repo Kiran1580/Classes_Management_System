@@ -276,7 +276,10 @@ else
                     Enrolled in: <strong>@(string.IsNullOrEmpty(student.CourseName) ? "Pending Batch Assignment" : $"{student.CourseName} ({student.BatchName})")</strong>
                 </p>
             </div>
-            <div class="d-flex gap-2">
+            <div class="d-flex gap-2 flex-wrap">
+                <a asp-area="" asp-controller="StudentCourses" asp-action="Index" class="btn btn-outline-light fw-semibold px-3">
+                    <i class="bi bi-book-half me-1"></i> My Batches
+                </a>
                 <a asp-area="" asp-controller="Profile" asp-action="Index" class="btn btn-outline-light fw-semibold px-3">
                     <i class="bi bi-person-lines-fill me-1"></i> My Profile
                 </a>
@@ -300,6 +303,56 @@ else
             </div>
             <a asp-area="" asp-controller="Profile" asp-action="Index" class="btn btn-sm btn-warning fw-semibold px-3 text-nowrap">
                 Complete Profile Now <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+    }
+
+    <!-- Smart Pending Fees Banner (Non-blocking alert prompt) -->
+    @if (student.PendingFees > 0)
+    {
+        <div class="alert border-0 shadow-sm rounded-3 d-flex flex-wrap align-items-center justify-content-between p-3 mb-4 gap-3" 
+             style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border-left: 5px solid #f59e0b !important;">
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-circle bg-warning bg-opacity-25 p-2 text-warning d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; font-size: 1.3rem;">
+                    <i class="bi bi-wallet2 text-dark"></i>
+                </div>
+                <div>
+                    <strong class="d-block text-dark fs-6">Pending Course Fees: ₹@student.PendingFees.ToString("N0") Due</strong>
+                    <small class="text-secondary">
+                        @if (student.PendingPaymentReviews > 0)
+                        {
+                            <span><i class="bi bi-clock-history text-primary me-1"></i> You have a payment proof currently undergoing administrative verification.</span>
+                        }
+                        else
+                        {
+                            <span>Please clear your outstanding fee installment or upload payment proof to keep your academic records up to date.</span>
+                        }
+                    </small>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="#" class="btn btn-sm btn-warning fw-bold px-3 shadow-sm text-nowrap">
+                    <i class="bi bi-qr-code me-1"></i> Pay / Submit Proof
+                </a>
+            </div>
+        </div>
+    }
+    else if (string.IsNullOrEmpty(student.CourseName) && student.TotalFees == 0)
+    {
+        <!-- Fresh Admission Notice (Waiting for Course & Batch Allocation) -->
+        <div class="alert border-0 shadow-sm rounded-3 d-flex flex-wrap align-items-center justify-content-between p-3 mb-4 gap-3" 
+             style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-left: 5px solid #3b82f6 !important;">
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-circle bg-primary bg-opacity-20 p-2 text-primary d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; font-size: 1.3rem;">
+                    <i class="bi bi-info-circle-fill"></i>
+                </div>
+                <div>
+                    <strong class="d-block text-dark fs-6">Welcome to the Academy! Admission Verified</strong>
+                    <small class="text-secondary">The administrative office is finalizing your course enrollment and batch timings. Once assigned, your lecture timetable, attendance, and fee structure will be displayed here.</small>
+                </div>
+            </div>
+            <a asp-area="" asp-controller="Profile" asp-action="Index" class="btn btn-sm btn-primary fw-semibold px-3 text-nowrap">
+                <i class="bi bi-person-lines-fill me-1"></i> View Profile
             </a>
         </div>
     }

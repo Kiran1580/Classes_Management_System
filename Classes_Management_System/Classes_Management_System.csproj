@@ -8,12 +8,17 @@
 
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="MailKit" Version="4.18.1" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\CMS_BAL\CMS_BAL.csproj" />
     <ProjectReference Include="..\CMS_DAL\CMS_DAL.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="EmailTemplates\**" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

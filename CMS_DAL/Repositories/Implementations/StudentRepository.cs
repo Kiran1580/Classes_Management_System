@@ -219,5 +219,27 @@ namespace CMS_DAL.Repositories.Implementations
                     commandType: CommandType.StoredProcedure);
             }
         }
+
+        public async Task<(Student? StudentInfo, IEnumerable<StudentEnrolledBatch> Batches, IEnumerable<StudentBatchSubject> Subjects)> GetStudentCoursesAndBatchesAsync(int? userId = null, int? studentId = null)
+        {
+            using (IDbConnection con = CreateConnection())
+            {
+                var parms = new DynamicParameters();
+                parms.Add("@UserId", userId);
+                parms.Add("@StudentId", studentId);
+
+                using (var multi = await con.QueryMultipleAsync(
+                    "sp_GetStudentCoursesAndBatches",
+                    parms,
+                    commandType: CommandType.StoredProcedure))
+                {
+                    var studentInfo = await multi.ReadFirstOrDefaultAsync<Student>();
+                    var batches = (await multi.ReadAsync<StudentEnrolledBatch>()) ?? Enumerable.Empty<StudentEnrolledBatch>();
+                    var subjects = (await multi.ReadAsync<StudentBatchSubject>()) ?? Enumerable.Empty<StudentBatchSubject>();
+
+                    return (studentInfo, batches, subjects);
+                }
+            }
+        }
     }
 }

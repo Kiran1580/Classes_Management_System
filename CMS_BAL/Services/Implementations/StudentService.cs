@@ -255,5 +255,78 @@ namespace CMS_BAL.Services.Implementations
             var batches = await _studentRepository.GetBatchesByCourseAsync(courseId);
             return batches.Select(MapBatch).ToList();
         }
+
+        public async Task<StudentCoursesAndBatchesViewModel> GetStudentCoursesAndBatchesAsync(int? userId = null, int? studentId = null)
+        {
+            var (studentInfo, batches, subjects) = await _studentRepository.GetStudentCoursesAndBatchesAsync(userId, studentId);
+
+            var viewModel = new StudentCoursesAndBatchesViewModel();
+
+            if (studentInfo != null)
+            {
+                viewModel.StudentId = studentInfo.StudentId;
+                viewModel.UserId = studentInfo.UserId;
+                viewModel.AdmissionNo = studentInfo.AdmissionNo;
+                viewModel.StudentFullName = studentInfo.FullName;
+                viewModel.Email = studentInfo.Email ?? string.Empty;
+                viewModel.Mobile = studentInfo.Mobile;
+                viewModel.AdmissionDate = studentInfo.AdmissionDate;
+                viewModel.IsActive = studentInfo.IsActive;
+            }
+
+            var subjectList = subjects?.ToList() ?? new List<CMS_DAL.Models.StudentBatchSubject>();
+
+            if (batches != null)
+            {
+                foreach (var b in batches)
+                {
+                    var batchItem = new StudentEnrolledBatchItem
+                    {
+                        EnrollmentId = b.EnrollmentId,
+                        StudentId = b.StudentId,
+                        BatchId = b.BatchId,
+                        BatchName = b.BatchName,
+                        BatchStatus = b.BatchStatus,
+                        BatchStartDate = b.BatchStartDate,
+                        BatchEndDate = b.BatchEndDate,
+                        StartTimeStr = b.StartTimeStr,
+                        EndTimeStr = b.EndTimeStr,
+                        RoomNo = b.RoomNo,
+                        Capacity = b.Capacity,
+                        EnrolledCount = b.EnrolledCount,
+                        EnrollmentDate = b.EnrollmentDate,
+                        EnrollmentStartDate = b.EnrollmentStartDate,
+                        EnrollmentEndDate = b.EnrollmentEndDate,
+                        EnrollmentStatus = b.EnrollmentStatus,
+                        CourseId = b.CourseId,
+                        CourseName = b.CourseName,
+                        CourseDescription = b.CourseDescription,
+                        CourseDuration = b.CourseDuration,
+                        AcademicYearName = b.AcademicYearName,
+                        TotalSessions = b.TotalSessions,
+                        AttendedSessions = b.AttendedSessions,
+                        Subjects = subjectList
+                            .Where(s => s.BatchId == b.BatchId)
+                            .Select(s => new StudentBatchSubjectItem
+                            {
+                                BatchId = s.BatchId,
+                                SubjectId = s.SubjectId,
+                                SubjectName = s.SubjectName,
+                                SubjectDescription = s.SubjectDescription,
+                                TeacherId = s.TeacherId,
+                                TeacherName = s.TeacherName,
+                                TeacherQualification = s.TeacherQualification,
+                                TeacherEmail = s.TeacherEmail,
+                                TeacherMobile = s.TeacherMobile
+                            })
+                            .ToList()
+                    };
+
+                    viewModel.Batches.Add(batchItem);
+                }
+            }
+
+            return viewModel;
+        }
     }
 }
